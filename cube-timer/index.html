@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>魔方打乱与计时模拟器</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="header-area">
+    <select id="cubeType" onchange="changeCubeType(); this.blur();">
+        <option value="2x2">2x2x2</option>
+        <option value="3x3" selected>3x3x3</option>
+        <option value="3x3oh">3x3x3 单手</option>
+        <option value="4x4">4x4x4</option>
+        <option value="5x5">5x5x5</option>
+        <option value="6x6">6x6x6</option>
+        <option value="7x7">7x7x7</option>
+        <option value="clock">魔表 (Clock)</option>
+        <option value="minx">五魔方 (Megaminx)</option>
+        <option value="pyram">金字塔 (Pyraminx)</option>
+        <option value="skewb">斜转魔方 (Skewb)</option>
+        <option value="sq1">Square-1</option>
+    </select>
+</div>
+
+<div class="scramble-display" id="displayText"></div>
+
+<div class="controls" style="margin-top: 10px; display: flex; align-items: center;">
+    <select id="crossColor" style="padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; margin-right: 10px; color: #333;">
+        <option value="white" selected>白色底</option>
+        <option value="yellow">黄色底</option>
+        <option value="green">绿色底</option>
+        <option value="blue">蓝色底</option>
+        <option value="red">红色底</option>
+        <option value="orange">橙色底</option>
+    </select>
+    <button onclick="solveCross(); this.blur();" style="background-color: #ffca28; color: #333;">求解 Cross</button>
+    <span id="crossResult" style="font-size: 18px; margin-left: 15px; font-family: monospace; font-weight: bold;"></span>
+</div>
+
+<div class="main-area">
+    <div class="timer-section">
+        <div id="timerDisplay">0.000</div>
+        
+        <div class="stats-board">
+            <h3>成绩统计</h3>
+            <div class="stat-line"><span>总计:</span> <span id="countDisplay">0</span></div>
+            <div class="stat-line"><span>平均:</span> <span id="meanDisplay">-</span></div>
+            <div class="stat-line"><span>ao12:</span> <span id="ao12Display">-</span></div>
+        </div>
+
+        <div class="time-list-container">
+            <div class="list-header">
+                <h3>成绩列表</h3>
+                <button class="clear-btn" onclick="clearCurrentTimes(); this.blur();">清空</button>
+            </div>
+            <ul id="timeList"></ul>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <twisty-player id="cubeViewer" puzzle="3x3x3" background="none" visualization="3D"></twisty-player>
+    </div>
+</div>
+
+<script src="js/cross-solver.js"></script>
+<script src="js/script.js"></script>
+<script type="module">
+import { randomScrambleForEvent } from "https://cdn.cubing.net/js/cubing/scramble";
+import "https://cdn.cubing.net/js/cubing/twisty";
+
+const player = document.getElementById('cubeViewer');
+const eventMap = { 'clock': 'clock', 'minx': 'minx', 'pyram': 'pyram', 'skewb': 'skewb', 'sq1': 'sq1' };
+
+window.getOfficialScramble = async function(type) {
+    const eventId = eventMap[type];
+    if (!eventId) return "";
+    const scramble = await randomScrambleForEvent(eventId);
+    return scramble.toString();
+};
+
+window.addEventListener('change-puzzle', (e) => {
+    const type = e.detail;
+    const puzzleMap = {
+        '2x2': '2x2x2', '3x3': '3x3x3', '3x3oh': '3x3x3',
+        '4x4': '4x4x4', '5x5': '5x5x5', '6x6': '6x6x6', '7x7': '7x7x7',
+        'clock': 'clock', 'minx': 'megaminx', 'pyram': 'pyraminx',
+        'skewb': 'skewb', 'sq1': 'square1'
+    };
+    
+    player.puzzle = puzzleMap[type] || '3x3x3';
+    
+    // 关键修正：对于 Square-1，强制设置其显示模式
+    if (type === 'sq1') {
+        player.visualization = "3D";
+    } else {
+        player.visualization = "3D"; // 确保其他魔方也是 3D
+    }
+});
+
+window.addEventListener('update-scramble', (e) => {
+    player.alg = e.detail;
+});
+
+window.viewerLoaded = true;
+</script>
+</body>
+</html>
