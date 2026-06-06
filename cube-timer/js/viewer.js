@@ -11,8 +11,12 @@ const player = document.getElementById('cubeViewer');
 window.getOfficialScramble = async function(type) {
     const eventId = eventMap[type];
     if (!eventId) return "";
-    const scramble = await randomScrambleForEvent(eventId);
-    return scramble.toString();
+    try {
+        const scramble = await randomScrambleForEvent(eventId);
+        return scramble.toString();
+    } catch (e) {
+        return ""; 
+    }
 };
 
 window.addEventListener('change-puzzle', (e) => {
@@ -23,9 +27,14 @@ window.addEventListener('change-puzzle', (e) => {
         'clock': 'clock', 'minx': 'megaminx', 'pyram': 'pyraminx',
         'skewb': 'skewb', 'sq1': 'square1'
     };
+    
+    player.alg = "";
     player.puzzle = puzzleMap[type] || '3x3x3';
+    player.visualization = "3D";
 });
 
 window.addEventListener('update-scramble', (e) => {
     player.alg = e.detail;
 });
+
+window.viewerLoaded = true;

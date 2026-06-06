@@ -1,3 +1,6 @@
+const STORAGE_KEY = 'cubeTimer.solveTimes.v1';
+const EVENT_TYPES = ['2x2', '3x3', '3x3oh', '4x4', '5x5', '6x6', '7x7', 'clock', 'minx', 'pyram', 'skewb', 'sq1'];
+
 let solveTimesMap = { 
     '2x2': [], '3x3': [], '3x3oh': [], '4x4': [], '5x5': [], '6x6': [], '7x7': [],
     'clock': [], 'minx': [], 'pyram': [], 'skewb': [], 'sq1': [] 
@@ -5,6 +8,33 @@ let solveTimesMap = {
 let timerState = 'IDLE';
 let startTime = 0;
 let activeInterval = null;
+
+function normalizeSolve(entry) {
+    if (typeof entry === 'number') {
+        return { time: entry, penalty: 'OK', createdAt: Date.now() };
+    }
+    return {
+        time: Number(entry.time) || 0,
+        penalty: ['OK', '+2', 'DNF'].includes(entry.penalty) ? entry.penalty : 'OK',
+        createdAt: Number(entry.createdAt) || Date.now()
+    };
+}
+
+function loadStoredTimes() {
+    try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!stored || typeof stored !== 'object') return;
+        EVENT_TYPES.forEach(type => {
+            solveTimesMap[type] = Array.isArray(stored[type]) ? stored[type].map(normalizeSolve) : [];
+        });
+    } catch (e) {
+        console.warn('Failed to load stored solve times', e);
+    }
+}
+
+function saveStoredTimes() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(solveTimesMap));
+}
 
 function generateScrambleStr(type) {
     const modifiers = ['', "'", '2'];
@@ -44,6 +74,76 @@ function generateScrambleStr(type) {
     return scramble.join(' ');
 }
 
+function generateAlienScramble(type) {
+    const r = Math.random;
+    const pick = arr => arr[Math.floor(r() * arr.length)];
+    let res = [];
+    if (type === 'pyram') {
+        const moves = ['U', 'L', 'R', 'B'];
+        const tips = ['u', 'l', 'r', 'b'];
+        const mods = ['', "'"];
+        let last = '';
+        for(let i=0; i<11; i++) {
+            let m = pick(moves);
+            while(m === last) m = pick(moves);
+            res.push(m + pick(mods));
+            last = m;
+        }
+        tips.forEach(t => { if(r() < 0.5) res.push(t + pick(mods)); });
+        return res.join(' ');
+    }
+    if (type === 'skewb') {
+        const moves = ['U', 'L', 'R', 'B'];
+        const mods = ['', "'"];
+        let last = '';
+        for(let i=0; i<11; i++) {
+            let m = pick(moves);
+            while(m === last) m = pick(moves);
+            res.push(m + pick(mods));
+            last = m;
+        }
+        return res.join(' ');
+    }
+    if (type === 'clock') {
+        let pins = ['UR', 'DR', 'DL', 'UL', 'U', 'R', 'D', 'L', 'ALL'];
+        pins.forEach(p => {
+            let v = Math.floor(r() * 12) - 5;
+            res.push(p + Math.abs(v) + (v >= 0 ? '+' : '-'));
+        });
+        res.push('y2');
+        ['U', 'R', 'D', 'L', 'ALL'].forEach(p => {
+            let v = Math.floor(r() * 12) - 5;
+            res.push(p + Math.abs(v) + (v >= 0 ? '+' : '-'));
+        });
+        ['UR', 'DR', 'DL', 'UL'].forEach(p => {
+            if (r() < 0.5) res.push(p);
+        });
+        return res.join(' ');
+    }
+    if (type === 'minx') {
+        for(let i=0; i<7; i++) {
+            for(let j=0; j<10; j++) {
+                let m = (j % 2 === 0) ? 'R' : 'D';
+                let dir = r() < 0.5 ? '++' : '--';
+                res.push(m + dir);
+            }
+            res.push(r() < 0.5 ? 'U' : "U'");
+        }
+        return res.join(' ');
+    }
+    if (type === 'sq1') {
+        for(let i=0; i<12; i++) {
+            let top = Math.floor(r() * 12) - 5;
+            let bot = Math.floor(r() * 12) - 5;
+            if (top === 0 && bot === 0) top = 1;
+            res.push(`(${top}, ${bot})`);
+            res.push('/');
+        }
+        return res.join(' ');
+    }
+    return "";
+}
+
 function applyScramble(scrambleStr) {
     window.dispatchEvent(new CustomEvent('update-scramble', { detail: scrambleStr }));
 }
@@ -54,6 +154,9 @@ async function handleRandomScramble() {
     if (['clock', 'minx', 'pyram', 'skewb', 'sq1'].includes(type)) {
         if (window.getOfficialScramble) {
             scramble = await window.getOfficialScramble(type);
+        }
+        if (!scramble) {
+            scramble = generateAlienScramble(type);
         }
     } else {
         scramble = generateScrambleStr(type);
@@ -84,17 +187,32 @@ function formatSolveTime(ms) {
     return minutes > 0 ? (minutes + ":" + (seconds < 10 ? "0" : "") + seconds) : seconds;
 }
 
+function getFinalTime(entry) {
+    const solve = normalizeSolve(entry);
+    if (solve.penalty === 'DNF') return Infinity;
+    return solve.time + (solve.penalty === '+2' ? 2000 : 0);
+}
+
+function formatSolveResult(entry) {
+    const solve = normalizeSolve(entry);
+    if (solve.penalty === 'DNF') return 'DNF';
+    const finalTime = getFinalTime(solve);
+    return solve.penalty === '+2' ? `${formatSolveTime(finalTime)} +2` : formatSolveTime(finalTime);
+}
+
 function calculateMean(arr) {
-    if (arr.length === 0) return "-";
-    let sum = arr.reduce((a, b) => a + b, 0);
-    return formatSolveTime(sum / arr.length);
+    const validTimes = arr.map(getFinalTime).filter(Number.isFinite);
+    if (validTimes.length === 0) return "-";
+    let sum = validTimes.reduce((a, b) => a + b, 0);
+    return formatSolveTime(sum / validTimes.length);
 }
 
 function calculateAo12(arr) {
     if (arr.length < 12) return "-";
-    let last12 = arr.slice(-12).sort((a, b) => a - b);
-    let sum = 0;
-    for (let i = 1; i < 11; i++) sum += last12[i];
+    let last12 = arr.slice(-12).map(getFinalTime).sort((a, b) => a - b);
+    let middle = last12.slice(1, 11);
+    if (middle.some(t => !Number.isFinite(t))) return "DNF";
+    let sum = middle.reduce((a, b) => a + b, 0);
     return formatSolveTime(sum / 10);
 }
 
@@ -106,16 +224,31 @@ function updateStatistics() {
     document.getElementById('ao12Display').innerText = calculateAo12(arr);
     let listHtml = "";
     arr.forEach((t, index) => {
-        listHtml = `<li>
-            <span>${index + 1}. ${formatSolveTime(t)}</span>
-            <button class="delete-btn" onclick="deleteTime(${index}); this.blur();">✖</button>
+        const solve = normalizeSolve(t);
+        const penaltyClass = solve.penalty === 'DNF' ? 'dnf-result' : (solve.penalty === '+2' ? 'plus-two-result' : '');
+        listHtml = `<li class="${penaltyClass}">
+            <span>${index + 1}. ${formatSolveResult(solve)}</span>
+            <div class="time-actions">
+                <button class="${solve.penalty === 'OK' ? 'active' : ''}" onclick="setPenalty(${index}, 'OK'); this.blur();">OK</button>
+                <button class="${solve.penalty === '+2' ? 'active' : ''}" onclick="setPenalty(${index}, '+2'); this.blur();">+2</button>
+                <button class="${solve.penalty === 'DNF' ? 'active' : ''}" onclick="setPenalty(${index}, 'DNF'); this.blur();">DNF</button>
+                <button class="delete-btn" onclick="deleteTime(${index}); this.blur();">×</button>
+            </div>
         </li>` + listHtml;
     });
     document.getElementById('timeList').innerHTML = listHtml;
 }
 
+function setPenalty(index, penalty) {
+    const type = getCurrentType();
+    solveTimesMap[type][index] = { ...normalizeSolve(solveTimesMap[type][index]), penalty };
+    saveStoredTimes();
+    updateStatistics();
+}
+
 function deleteTime(index) {
     solveTimesMap[getCurrentType()].splice(index, 1);
+    saveStoredTimes();
     updateStatistics();
 }
 
@@ -123,8 +256,14 @@ function clearCurrentTimes() {
     const type = getCurrentType();
     if(confirm(`确定要清空该项目的所有成绩吗？`)) {
         solveTimesMap[type] = [];
+        saveStoredTimes();
         updateStatistics();
     }
+}
+
+function setTimerClass(className) {
+    const el = document.getElementById('timerDisplay');
+    el.className = className || '';
 }
 
 function updateInspection() {
@@ -133,7 +272,7 @@ function updateInspection() {
     if (left <= 0) {
         clearInterval(activeInterval);
         document.getElementById('timerDisplay').innerText = "DNF";
-        document.getElementById('timerDisplay').style.color = '#ff4c4c';
+        setTimerClass('dnf');
         timerState = 'IDLE';
     } else if (timerState === 'INSPECTING') {
         document.getElementById('timerDisplay').innerText = left;
@@ -178,19 +317,21 @@ window.addEventListener('keydown', (e) => {
             let displayEl = document.getElementById('timerDisplay');
             if (timerState === 'IDLE') {
                 timerState = 'INSPECTING';
-                displayEl.style.color = '#ff4c4c';
+                setTimerClass('inspecting');
                 displayEl.innerText = "15";
                 startTime = performance.now();
                 activeInterval = setInterval(updateInspection, 100);
             } else if (timerState === 'INSPECTING') {
                 timerState = 'READY';
-                displayEl.style.color = '#00D800';
+                setTimerClass('ready');
             } else if (timerState === 'RUNNING') {
                 clearInterval(activeInterval);
                 timerState = 'STOPPED';
                 let finalTime = performance.now() - startTime;
-                solveTimesMap[getCurrentType()].push(finalTime);
+                solveTimesMap[getCurrentType()].push({ time: finalTime, penalty: 'OK', createdAt: Date.now() });
                 displayEl.innerText = formatSolveTime(finalTime);
+                setTimerClass('stopped');
+                saveStoredTimes();
                 updateStatistics();
                 handleRandomScramble();
             }
@@ -205,17 +346,19 @@ window.addEventListener('keyup', (e) => {
         if (timerState === 'READY') {
             clearInterval(activeInterval);
             timerState = 'RUNNING';
-            document.getElementById('timerDisplay').style.color = 'white';
+            setTimerClass('running');
             startTime = performance.now();
             activeInterval = setInterval(updateTimer, 10);
         } else if (timerState === 'STOPPED') {
             timerState = 'IDLE';
+            setTimerClass('');
         }
     }
 });
 
 function init() {
     if (window.viewerLoaded) {
+        loadStoredTimes();
         changeCubeType();
     } else {
         setTimeout(init, 50);

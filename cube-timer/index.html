@@ -27,8 +27,8 @@
 
 <div class="scramble-display" id="displayText"></div>
 
-<div class="controls" style="margin-top: 10px; display: flex; align-items: center;">
-    <select id="crossColor" style="padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; margin-right: 10px; color: #333;">
+<div class="controls">
+    <select id="crossColor">
         <option value="white" selected>白色底</option>
         <option value="yellow">黄色底</option>
         <option value="green">绿色底</option>
@@ -36,19 +36,19 @@
         <option value="red">红色底</option>
         <option value="orange">橙色底</option>
     </select>
-    <button onclick="solveCross(); this.blur();" style="background-color: #ffca28; color: #333;">求解 Cross</button>
-    <span id="crossResult" style="font-size: 18px; margin-left: 15px; font-family: monospace; font-weight: bold;"></span>
+    <button onclick="solveCross(); this.blur();">求解 Cross</button>
+    <span id="crossResult"></span>
 </div>
 
 <div class="main-area">
     <div class="timer-section">
         <div id="timerDisplay">0.000</div>
-        
+
         <div class="stats-board">
             <h3>成绩统计</h3>
-            <div class="stat-line"><span>总计:</span> <span id="countDisplay">0</span></div>
-            <div class="stat-line"><span>平均:</span> <span id="meanDisplay">-</span></div>
-            <div class="stat-line"><span>ao12:</span> <span id="ao12Display">-</span></div>
+            <div class="stat-line"><span>总计</span> <span id="countDisplay">0</span></div>
+            <div class="stat-line"><span>平均</span> <span id="meanDisplay">-</span></div>
+            <div class="stat-line"><span>ao12</span> <span id="ao12Display">-</span></div>
         </div>
 
         <div class="time-list-container">
@@ -65,6 +65,11 @@
     </div>
 </div>
 
+<div class="hint-bar">
+    <span>按 <kbd>Space</kbd> 开始/停止计时</span>
+    <span>松手开始计时 · 再次按下停止</span>
+</div>
+
 <script src="js/cross-solver.js"></script>
 <script src="js/script.js"></script>
 <script type="module">
@@ -77,8 +82,12 @@ const eventMap = { 'clock': 'clock', 'minx': 'minx', 'pyram': 'pyram', 'skewb': 
 window.getOfficialScramble = async function(type) {
     const eventId = eventMap[type];
     if (!eventId) return "";
-    const scramble = await randomScrambleForEvent(eventId);
-    return scramble.toString();
+    try {
+        const scramble = await randomScrambleForEvent(eventId);
+        return scramble.toString();
+    } catch (e) {
+        return "";
+    }
 };
 
 window.addEventListener('change-puzzle', (e) => {
@@ -89,15 +98,10 @@ window.addEventListener('change-puzzle', (e) => {
         'clock': 'clock', 'minx': 'megaminx', 'pyram': 'pyraminx',
         'skewb': 'skewb', 'sq1': 'square1'
     };
-    
+
+    player.alg = "";
     player.puzzle = puzzleMap[type] || '3x3x3';
-    
-    // 关键修正：对于 Square-1，强制设置其显示模式
-    if (type === 'sq1') {
-        player.visualization = "3D";
-    } else {
-        player.visualization = "3D"; // 确保其他魔方也是 3D
-    }
+    player.visualization = "3D";
 });
 
 window.addEventListener('update-scramble', (e) => {

@@ -149,6 +149,7 @@ class CrossSolver {
 
         return "Cross calculation failed or takes > 8 moves.";
     }
+
     mapFace(face, setup) {
         let current = face;
         let moves = setup.split(' ').filter(m => m);
