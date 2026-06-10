@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Square-1 3D</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+    body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: linear-gradient(135deg, #eef4ff 0%, #f8faff 52%, #fff7ec 100%);
+    }
+
+    .sq1-standalone {
+        width: min(960px, 100%);
+    }
+
+    .sq1-standalone-title {
+        margin: 0 0 14px;
+        color: var(--text-primary);
+        font-size: 22px;
+        text-align: center;
+    }
+
+    .sq1-standalone-scramble {
+        margin: 0 0 18px;
+        padding: 14px 18px;
+        border: 1.5px solid var(--border-color);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: clamp(14px, 2vw, 20px);
+        line-height: 1.6;
+        text-align: center;
+        box-shadow: var(--shadow-card);
+    }
+
+    .sq1-standalone .sq1-viewer {
+        height: min(72vh, 680px);
+    }
+</style>
+</head>
+<body>
+<main class="sq1-standalone">
+    <h1 class="sq1-standalone-title">Square-1 3D</h1>
+    <div id="standaloneScramble" class="sq1-standalone-scramble"></div>
+    <div id="sq1Viewer" class="sq1-viewer"></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="js/sq1-viewer.js"></script>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const scramble = params.get('alg') || '';
+    document.getElementById('standaloneScramble').textContent = scramble || 'No scramble';
+    window.Sq1Viewer.show();
+    window.Sq1Viewer.applyScramble(scramble);
+</script>
+</body>
+</html>

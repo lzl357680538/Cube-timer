@@ -25,14 +25,7 @@
     </select>
 </div>
 
-<div class="scramble-row">
-    <button type="button" id="prevScrambleBtn" class="scramble-nav-btn" disabled>上一条</button>
-    <div class="scramble-display" id="displayText"></div>
-    <div class="scramble-actions">
-        <button type="button" id="nextScrambleBtn" class="scramble-nav-btn">下一条</button>
-        <a id="twLink" class="scramble-nav-btn tw-link" href="https://alpha.twizzle.net/edit/" target="_blank" rel="noopener noreferrer">Tw</a>
-    </div>
-</div>
+<div class="scramble-display" id="displayText"></div>
 
 <div class="controls">
     <select id="crossColor">
@@ -70,13 +63,6 @@
     <div class="canvas-container">
         <twisty-player id="cubeViewer" puzzle="3x3x3" background="none" visualization="3D"></twisty-player>
         <div id="sq1Viewer" class="sq1-viewer" style="display:none;"></div>
-        <div class="sq1-playback" id="sq1Playback" style="display:none;">
-            <button type="button" id="sq1PrevStepBtn" class="playback-btn step-btn" disabled>上一步</button>
-            <button type="button" id="sq1PlayPauseBtn" class="playback-btn" disabled>播放</button>
-            <input type="range" id="sq1ProgressSlider" class="playback-slider" min="0" max="0" value="0" step="1" />
-            <span id="sq1StepCounter" class="playback-steps">0 / 0</span>
-            <button type="button" id="sq1NextStepBtn" class="playback-btn step-btn" disabled>下一步</button>
-        </div>
     </div>
 </div>
 
@@ -92,44 +78,12 @@
 <script src="js/cstimer-sq1.js"></script>
 <script src="js/script.js"></script>
 <script type="module">
-import { randomScrambleForEvent } from "https://cdn.cubing.net/v0/js/cubing/scramble";
-import "https://cdn.cubing.net/v0/js/cubing/twisty";
+import { randomScrambleForEvent } from "https://cdn.cubing.net/js/cubing/scramble";
+import "https://cdn.cubing.net/js/cubing/twisty";
 
 const player = document.getElementById('cubeViewer');
 const sq1Viewer = document.getElementById('sq1Viewer');
-const sq1Playback = document.getElementById('sq1Playback');
-const sq1PlayBtn = document.getElementById('sq1PlayPauseBtn');
-const sq1PrevStepBtn = document.getElementById('sq1PrevStepBtn');
-const sq1NextStepBtn = document.getElementById('sq1NextStepBtn');
-const sq1ProgressSlider = document.getElementById('sq1ProgressSlider');
 const eventMap = { 'clock': 'clock', 'minx': 'minx', 'pyram': 'pyram', 'skewb': 'skewb', 'sq1': 'sq1' };
-
-function updatePlaybackUI() {
-    if (window.Sq1Playback) window.Sq1Playback.refreshControls?.();
-}
-
-sq1PlayBtn.addEventListener('click', () => {
-    if (window.Sq1Playback) window.Sq1Playback.toggle();
-    updatePlaybackUI();
-});
-
-sq1PrevStepBtn.addEventListener('click', () => {
-    if (!window.Sq1Playback) return;
-    const st = window.Sq1Playback.getState();
-    window.Sq1Playback.seekTo(st.current - 1);
-    updatePlaybackUI();
-});
-
-sq1NextStepBtn.addEventListener('click', () => {
-    if (!window.Sq1Playback) return;
-    const st = window.Sq1Playback.getState();
-    window.Sq1Playback.seekTo(st.current + 1);
-    updatePlaybackUI();
-});
-
-sq1ProgressSlider.addEventListener('input', () => {
-    if (window.Sq1Playback) window.Sq1Playback.seekTo(Number(sq1ProgressSlider.value));
-});
 
 window.getOfficialScramble = async function(type) {
     const eventId = eventMap[type];
@@ -154,20 +108,16 @@ window.addEventListener('change-puzzle', (e) => {
     if (type === 'sq1') {
         player.style.display = 'none';
         if (sq1Viewer) sq1Viewer.style.display = 'flex';
-        if (sq1Playback) sq1Playback.style.display = 'flex';
         if (window.Sq1Viewer) window.Sq1Viewer.show();
-        updatePlaybackUI();
         return;
     }
 
     if (sq1Viewer) sq1Viewer.style.display = 'none';
-    if (sq1Playback) sq1Playback.style.display = 'none';
     if (window.Sq1Viewer) window.Sq1Viewer.hide();
     player.style.display = 'block';
     player.alg = "";
     player.puzzle = puzzleMap[type] || '3x3x3';
     player.visualization = "3D";
-    updatePlaybackUI();
 });
 
 window.addEventListener('update-scramble', (e) => {
@@ -177,19 +127,9 @@ window.addEventListener('update-scramble', (e) => {
         return;
     }
     player.alg = e.detail;
-    updatePlaybackUI();
 });
 
-window.addEventListener('scramble-applied', updatePlaybackUI);
-
-const activeScramble = document.getElementById('displayText').innerText;
 window.viewerLoaded = true;
-if (activeScramble && activeScramble !== '生成中...') {
-    window.dispatchEvent(new CustomEvent('update-scramble', { detail: activeScramble }));
-    updatePlaybackUI();
-} else {
-    window.dispatchEvent(new CustomEvent('change-puzzle', { detail: document.getElementById('cubeType').value }));
-}
 </script>
 </body>
 </html>
