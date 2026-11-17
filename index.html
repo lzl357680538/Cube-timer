@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cube Space · 魔方训练与状态实验室</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23167d8d'/%3E%3Cpath d='M8 8h16v16H8zM8 13h16M8 19h16M13 8v16M19 8v16' stroke='white' fill='none'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="header-area">
+      <a class="brand" href="./" aria-label="Cube Space 首页"
+        ><span class="brand-icon">▦</span
+        ><span
+          >CUBE<span class="brand-light">SPACE</span
+          ><small>每一次，快一点。</small></span
+        ></a
+      >
+      <div class="header-tools">
+        <label class="event-label" for="cubeType">训练项目</label>
+        <select id="cubeType" onchange="changeCubeType(); this.blur();">
+          <option value="2x2">2x2x2</option>
+          <option value="3x3" selected>3x3x3</option>
+          <option value="3x3oh">3x3x3 单手</option>
+          <option value="4x4">4x4x4</option>
+          <option value="5x5">5x5x5</option>
+          <option value="6x6">6x6x6</option>
+          <option value="7x7">7x7x7</option>
+          <option value="clock">魔表 (Clock)</option>
+          <option value="minx">五魔方 (Megaminx)</option>
+          <option value="pyram">金字塔 (Pyraminx)</option>
+          <option value="skewb">斜转魔方 (Skewb)</option>
+          <option value="sq1">Square-1</option>
+        </select>
+        <button type="button" id="appearanceBtn" aria-haspopup="dialog">
+          ◐ <span>外观</span>
+        </button>
+      </div>
+    </header>
+    <nav class="workspace-tabs" aria-label="工作区">
+      <button type="button" id="timerTab" aria-pressed="true">计时训练</button
+      ><button type="button" id="labTab" aria-pressed="false">
+        状态实验室 <span>3×3</span>
+      </button>
+    </nav>
+    <main class="workspace" id="timerWorkspace">
+      <section class="scramble-card" aria-labelledby="scrambleHeading">
+        <div class="section-heading">
+          <h2 id="scrambleHeading">本次打乱 <span>SCRAMBLE</span></h2>
+          <a
+            id="twLink"
+            href="https://alpha.twizzle.net/edit/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >在 Twizzle 打开 ↗</a
+          >
+        </div>
+
+        <div class="scramble-row">
+          <button
+            type="button"
+            id="prevScrambleBtn"
+            class="scramble-nav-btn"
+            disabled
+          >
+            上一条
+          </button>
+          <div class="scramble-display" id="displayText"></div>
+          <div class="scramble-actions">
+            <button type="button" id="nextScrambleBtn" class="scramble-nav-btn">
+              下一条
+            </button>
+          </div>
+        </div>
+      </section>
+      <div class="controls" id="crossControls">
+        <select id="crossColor">
+          <option value="white" selected>白色底</option>
+          <option value="yellow">黄色底</option>
+          <option value="green">绿色底</option>
+          <option value="blue">蓝色底</option>
+          <option value="red">红色底</option>
+          <option value="orange">橙色底</option>
+        </select>
+        <button type="button" onclick="solveCross(); this.blur();">
+          求解 Cross
+        </button>
+        <span id="crossResult"></span>
+      </div>
+
+      <div class="main-area">
+        <div class="timer-section">
+          <section class="timer-card" aria-label="计时器">
+            <div class="timer-eyebrow">
+              <span class="status-dot"></span
+              ><span id="timerStatus">准备好下一次突破</span
+              ><span class="session-label">自由训练</span>
+            </div>
+            <div id="timerDisplay">0.000</div>
+            <p class="timer-instruction">按空格进入观察 · 再次按住，松开开始</p>
+          </section>
+
+          <div class="stats-board">
+            <h3>成绩统计</h3>
+            <div class="stat-line">
+              <span>总计</span> <span id="countDisplay">0</span>
+            </div>
+            <div class="stat-line">
+              <span>平均</span> <span id="meanDisplay">-</span>
+            </div>
+            <div class="stat-line">
+              <span>ao12</span> <span id="ao12Display">-</span>
+            </div>
+          </div>
+
+          <div class="time-list-container">
+            <div class="list-header">
+              <h3>成绩列表</h3>
+              <button
+                class="clear-btn"
+                onclick="clearCurrentTimes(); this.blur();"
+              >
+                清空
+              </button>
+            </div>
+            <ul id="timeList"></ul>
+            <p class="empty-state" id="emptyTimes">
+              还没有成绩<span>从第一次还原开始，记录你的进步。</span>
+            </p>
+          </div>
+        </div>
+
+        <section class="canvas-container" aria-label="打乱预览">
+          <div class="section-heading">
+            <h2>打乱预览 <span>PREVIEW</span></h2>
+            <span class="preview-badge" id="previewStatus">最终状态</span>
+          </div>
+          <div class="viewer-stage">
+            <twisty-player
+              id="cubeViewer"
+              puzzle="3x3x3"
+              background="none"
+              visualization="3D"
+              control-panel="none"
+              hint-facelets="none"
+              tempo-scale="2"
+            ></twisty-player>
+            <div id="sq1Viewer" class="sq1-viewer" style="display: none"></div>
+          </div>
+          <div class="preview-caption">
+            <span>拖动旋转视角</span
+            ><button type="button" id="replayBtn" class="text-btn">
+              ↻ 查看打乱过程
+            </button>
+          </div>
+          <div class="playback-panel" id="playbackPanel" hidden>
+            <div class="playback-timeline">
+              <input
+                type="range"
+                id="progressSlider"
+                class="playback-slider"
+                aria-label="打乱进度"
+                min="0"
+                max="0"
+                value="0"
+                step="1"
+                disabled
+              /><output id="stepCounter">0 / 0</output>
+            </div>
+            <div class="playback-actions">
+              <button
+                type="button"
+                id="startStepBtn"
+                aria-label="回到起点"
+                title="回到起点"
+                disabled
+              >
+                ↤
+              </button>
+              <button
+                type="button"
+                id="prevStepBtn"
+                aria-label="上一步"
+                title="上一步"
+                disabled
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                id="playPauseBtn"
+                class="primary-btn"
+                disabled
+              >
+                播放
+              </button>
+              <button
+                type="button"
+                id="nextStepBtn"
+                aria-label="下一步"
+                title="下一步"
+                disabled
+              >
+                ›
+              </button>
+              <button
+                type="button"
+                id="endStepBtn"
+                aria-label="查看最终状态"
+                title="查看最终状态"
+                disabled
+              >
+                ↦
+              </button>
+              <button type="button" id="closePlaybackBtn" class="text-btn">
+                收起
+              </button>
+            </div>
+          </div>
+          <p id="viewerMessage" class="viewer-message" role="status">
+            正在加载 3D 预览…
+          </p>
+        </section>
+      </div>
+
+      <div class="hint-bar">
+        <span>按 <kbd>Space</kbd> 开始/停止计时</span>
+        <span>松手开始计时 · 再次按下停止</span>
+      </div>
+    </main>
+    <section
+      class="lab-workspace"
+      id="labWorkspace"
+      hidden
+      aria-labelledby="labTitle"
+    >
+      <div class="lab-intro">
+        <div>
+          <p class="eyebrow">CUBE LAB / 01</p>
+          <h1 id="labTitle">从一个状态，到另一个状态。</h1>
+          <p>转动、记录、撤销。建立两个三阶状态，探索它们之间的路径。</p>
+        </div>
+        <span class="preview-badge">三阶 · 固定中心朝向</span>
+      </div>
+      <div class="state-grid">
+        <section class="state-card" data-state="0">
+          <div class="section-heading">
+            <h2><span class="state-index">01</span> 起始状态</h2>
+            <button type="button" class="text-btn" data-use-scramble="0">
+              使用当前三阶打乱
+            </button>
+          </div>
+          <div class="lab-viewer">
+            <twisty-player
+              id="stateViewer0"
+              puzzle="3x3x3"
+              background="none"
+              control-panel="none"
+              hint-facelets="none"
+              tempo-scale="2"
+            ></twisty-player>
+          </div>
+          <div class="state-toolbar">
+            <button type="button" data-undo="0" disabled>↶ 撤销一步</button
+            ><button type="button" data-reset="0" class="text-btn">复原</button
+            ><span id="stateCount0">0 步</span>
+          </div>
+          <div
+            id="moveButtons0"
+            class="move-buttons"
+            aria-label="起始状态转动操作"
+          ></div>
+          <label for="stateInput0" class="input-label"
+            >操作记录 / 输入公式</label
+          ><textarea
+            id="stateInput0"
+            rows="3"
+            placeholder="例如：R U R' U'"
+            spellcheck="false"
+          ></textarea>
+          <div class="state-input-footer">
+            <span id="stateMessage0" role="status">从复原状态开始</span
+            ><button type="button" data-apply="0">应用公式</button>
+          </div>
+        </section>
+        <section class="state-card" data-state="1">
+          <div class="section-heading">
+            <h2><span class="state-index">02</span> 目标状态</h2>
+            <button type="button" class="text-btn" id="copySourceBtn">
+              复制起始状态
+            </button>
+          </div>
+          <div class="lab-viewer">
+            <twisty-player
+              id="stateViewer1"
+              puzzle="3x3x3"
+              background="none"
+              control-panel="none"
+              hint-facelets="none"
+              tempo-scale="2"
+            ></twisty-player>
+          </div>
+          <div class="state-toolbar">
+            <button type="button" data-undo="1" disabled>↶ 撤销一步</button
+            ><button type="button" data-reset="1" class="text-btn">复原</button
+            ><span id="stateCount1">0 步</span>
+          </div>
+          <div
+            id="moveButtons1"
+            class="move-buttons"
+            aria-label="目标状态转动操作"
+          ></div>
+          <label for="stateInput1" class="input-label"
+            >操作记录 / 输入公式</label
+          ><textarea
+            id="stateInput1"
+            rows="3"
+            placeholder="留空表示复原状态"
+            spellcheck="false"
+          ></textarea>
+          <div class="state-input-footer">
+            <span id="stateMessage1" role="status">从复原状态开始</span
+            ><button type="button" data-apply="1">应用公式</button>
+          </div>
+        </section>
+      </div>
+      <section class="solution-card">
+        <div class="solution-heading">
+          <div>
+            <h2>寻找转换公式 <span>01 → 02</span></h2>
+            <p>使用后台求解器搜索较短路径，并校验终态。结果不保证最短。</p>
+          </div>
+          <button type="button" id="solveStatesBtn" class="primary-btn">
+            求解转换公式 →
+          </button>
+        </div>
+        <p id="solverStatus" role="status">
+          支持 U D L R F B 及其逆转、半转；可粘贴公式后直接求解。
+        </p>
+        <div id="solutionResult" hidden>
+          <div id="solutionAlg" class="solution-alg"></div>
+          <div class="solution-meta">
+            <span id="solutionMetrics"></span
+            ><button type="button" id="copySolutionBtn">复制公式</button
+            ><button type="button" id="playSolutionBtn">▶ 播放转换</button>
+          </div>
+          <div id="solutionPreview" hidden>
+            <twisty-player
+              id="solutionViewer"
+              puzzle="3x3x3"
+              background="none"
+              control-panel="none"
+              hint-facelets="none"
+              tempo-scale="2"
+            ></twisty-player>
+          </div>
+        </div>
+      </section>
+    </section>
+    <dialog id="appearanceDialog" aria-labelledby="appearanceTitle">
+      <div class="section-heading">
+        <h2 id="appearanceTitle">让训练空间更像你</h2>
+        <button type="button" id="closeAppearanceBtn" aria-label="关闭外观设置">
+          ×
+        </button>
+      </div>
+      <p class="settings-description">选择背景，留一点自己喜欢的颜色。</p>
+      <div class="theme-options" role="group" aria-label="背景主题">
+        <button
+          type="button"
+          data-theme="mist"
+          class="theme-swatch mist"
+          aria-pressed="true"
+        >
+          晨雾
+        </button>
+        <button
+          type="button"
+          data-theme="sand"
+          class="theme-swatch sand"
+          aria-pressed="false"
+        >
+          暖沙
+        </button>
+        <button
+          type="button"
+          data-theme="forest"
+          class="theme-swatch forest"
+          aria-pressed="false"
+        >
+          青屿
+        </button>
+      </div>
+      <label class="upload-zone" for="wallpaperInput"
+        ><strong>＋ 上传自定义壁纸</strong
+        ><span>JPG / PNG / WebP · 最大 15 MB · 仅保存在本机</span></label
+      >
+      <input
+        type="file"
+        id="wallpaperInput"
+        accept="image/jpeg,image/png,image/webp"
+        hidden
+      />
+      <label class="setting-line" for="wallpaperShade"
+        >背景遮罩 <output id="shadeValue">35%</output></label
+      >
+      <input
+        type="range"
+        id="wallpaperShade"
+        min="0"
+        max="80"
+        value="35"
+        aria-label="壁纸白色遮罩强度"
+      />
+      <div class="settings-footer">
+        <p id="appearanceMessage" role="status"></p>
+        <button type="button" id="removeWallpaperBtn">恢复主题背景</button>
+      </div>
+    </dialog>
+    <script src="js/cross-solver.js"></script>
+    <script src="vendor/legacy-three/three.min.js"></script>
+    <script src="vendor/legacy-three/OrbitControls.js"></script>
+    <script src="js/sq1-viewer.js"></script>
+    <script src="js/cstimer-sq1.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/appearance.js"></script>
+    <script type="module" src="js/playback.js"></script>
+    <script type="module" src="js/lab.js"></script>
+  </body>
+</html>
