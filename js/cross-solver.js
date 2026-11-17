@@ -1,4 +1,4 @@
-import { parseMoves } from "./moves.js";
+import { parseFaceMoves as parseMoves } from "./moves.js";
 
 export const MOVES = [
   "R",

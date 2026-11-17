@@ -433,7 +433,18 @@
           <h1 id="labTitle">从一个状态，到另一个状态。</h1>
           <p>转动、记录、撤销。建立两个三阶状态，探索它们之间的路径。</p>
         </div>
-        <span class="preview-badge">三阶，固定中心朝向</span>
+        <div class="lab-intro-actions">
+          <span class="preview-badge">三阶 · 支持宽转、转体和中层</span>
+          <button
+            type="button"
+            id="openAlgToolsBtn"
+            aria-haspopup="dialog"
+            aria-controls="algorithmTools"
+            aria-expanded="false"
+          >
+            公式工具
+          </button>
+        </div>
       </div>
       <div class="state-grid">
         <section class="state-card" data-state="0">
@@ -462,6 +473,12 @@
             ><span id="stateCount0">0 步</span>
           </div>
           <div
+            id="moveModes0"
+            class="move-modes"
+            role="group"
+            aria-label="起始状态转动类型"
+          ></div>
+          <div
             id="moveButtons0"
             class="move-buttons"
             aria-label="起始状态转动操作"
@@ -471,7 +488,7 @@
           ><textarea
             id="stateInput0"
             rows="3"
-            placeholder="例如：R U R' U'"
+            placeholder="例如：r U R' U' M2 x（可不加空格）"
             spellcheck="false"
           ></textarea>
           <div class="state-input-footer">
@@ -505,6 +522,12 @@
             ><span id="stateCount1">0 步</span>
           </div>
           <div
+            id="moveModes1"
+            class="move-modes"
+            role="group"
+            aria-label="目标状态转动类型"
+          ></div>
+          <div
             id="moveButtons1"
             class="move-buttons"
             aria-label="目标状态转动操作"
@@ -534,7 +557,8 @@
           </button>
         </div>
         <p id="solverStatus" role="status">
-          支持 U D L R F B 及其逆转、半转；可粘贴公式后直接求解。
+          支持面转、宽转 u/r 等、转体 x/y/z 和中层
+          M/E/S，及其逆转、半转；可直接粘贴 CFOP 公式。
         </p>
         <div id="solutionResult" hidden>
           <div id="solutionAlg" class="solution-alg"></div>
@@ -559,6 +583,62 @@
         </div>
       </section>
     </section>
+
+    <dialog
+      id="algorithmTools"
+      class="algorithm-tools"
+      aria-labelledby="algorithmToolsTitle"
+    >
+      <div class="card-head">
+        <h2 id="algorithmToolsTitle">公式工具</h2>
+        <button
+          type="button"
+          id="closeAlgToolsBtn"
+          class="ghost-btn"
+          aria-label="关闭公式工具"
+        >
+          ×
+        </button>
+      </div>
+      <section class="inverse-tool" aria-labelledby="inverseTitle">
+        <h3 id="inverseTitle">求逆公式</h3>
+        <p class="settings-description" id="inverseDescription">
+          从最后一步向前倒序，并将每步取逆；半转仍为半转。
+        </p>
+        <label for="inverseInput" class="input-label">原公式</label>
+        <textarea
+          id="inverseInput"
+          rows="4"
+          placeholder="例如：RUDR’"
+          spellcheck="false"
+          aria-describedby="inverseDescription"
+        ></textarea>
+        <label for="inverseOutput" class="input-label">逆公式</label>
+        <textarea
+          id="inverseOutput"
+          rows="4"
+          readonly
+          placeholder="输入后自动生成，例如：R D' U' R'"
+          spellcheck="false"
+        ></textarea>
+        <div class="inverse-actions">
+          <button
+            type="button"
+            id="copyInverseBtn"
+            class="primary-btn"
+            disabled
+          >
+            复制逆公式
+          </button>
+          <button type="button" id="clearInverseBtn" class="text-btn">
+            清空
+          </button>
+        </div>
+        <p id="inverseStatus" role="status">
+          支持宽转、转体、中层与紧凑写法，最多 500 步。
+        </p>
+      </section>
+    </dialog>
 
     <dialog id="appearanceDialog" aria-labelledby="appearanceTitle">
       <div class="card-head">
@@ -633,5 +713,6 @@
     <script src="js/appearance.js" defer></script>
     <script type="module" src="js/playback.js"></script>
     <script type="module" src="js/lab.js"></script>
+    <script type="module" src="js/alg-tools.js"></script>
   </body>
 </html>

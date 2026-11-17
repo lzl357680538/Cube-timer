@@ -8,6 +8,49 @@ let libraries,
   version = 0,
   busy = false;
 const storageKey = "cubeTimer.lab.v1";
+const moveGroups = [
+  { id: "face", label: "面转", faces: ["U", "R", "F", "D", "L", "B"] },
+  { id: "wide", label: "宽转", faces: ["u", "r", "f", "d", "l", "b"] },
+  { id: "slice", label: "转体 / 中层", faces: ["x", "y", "z", "M", "E", "S"] },
+];
+
+function initializeMoveButtons(index) {
+  const modes = $(`moveModes${index}`);
+  const grid = $(`moveButtons${index}`);
+  function selectGroup(group) {
+    modes.querySelectorAll("button").forEach((button) => {
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.moveMode === group.id),
+      );
+    });
+    grid.replaceChildren();
+    for (const suffix of ["", "'", "2"])
+      for (const face of group.faces) {
+        const move = face + suffix;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = move;
+        if ("URFDLB".includes(face.toUpperCase()))
+          button.dataset.face = face.toUpperCase();
+        button.setAttribute("aria-label", `转动 ${move}`);
+        button.addEventListener("click", () => {
+          if (applyInput(index)) setState(index, [...states[index], move]);
+        });
+        grid.append(button);
+      }
+  }
+  for (const group of moveGroups) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = group.label;
+    button.dataset.moveMode = group.id;
+    button.setAttribute("aria-controls", grid.id);
+    button.addEventListener("click", () => selectGroup(group));
+    modes.append(button);
+  }
+  selectGroup(moveGroups[0]);
+}
 function initializeLabViewers() {
   document.querySelectorAll("[data-lazy-player]").forEach((placeholder) => {
     const viewer = document.createElement("twisty-player");
@@ -106,19 +149,7 @@ $("timerTab").addEventListener("click", (event) => {
 });
 $("labTab").addEventListener("click", () => setWorkspace(true));
 for (let index = 0; index < 2; index++) {
-  for (const suffix of ["", "'", "2"])
-    for (const face of ["U", "R", "F", "D", "L", "B"]) {
-      const move = face + suffix;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = move;
-      button.dataset.face = face;
-      button.setAttribute("aria-label", `转动 ${move}`);
-      button.addEventListener("click", () => {
-        if (applyInput(index)) setState(index, [...states[index], move]);
-      });
-      $(`moveButtons${index}`).append(button);
-    }
+  initializeMoveButtons(index);
   document
     .querySelector(`[data-undo="${index}"]`)
     .addEventListener("click", () => {
@@ -173,7 +204,11 @@ $("solveStatesBtn").addEventListener("click", async () => {
     solutionSource = source;
     $("solutionAlg").textContent = solution || "两个状态相同，无需转动。";
     const length = [...result.experimentalExpand()].length;
-    $("solutionMetrics").textContent = `${length} 步 HTM · 已校验到达目标状态`;
+    const rotations = parse(solution).filter((move) =>
+      /^[xyz]/.test(move),
+    ).length;
+    $("solutionMetrics").textContent =
+      `${length - rotations} 步 HTM${rotations ? ` · ${rotations} 次转体` : ""} · 已校验到达目标状态`;
     $("solverStatus").textContent =
       `求解完成 · ${((performance.now() - start) / 1000).toFixed(2)} 秒（包含本次模块加载与初始化）`;
     $("solutionResult").hidden = false;

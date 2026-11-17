@@ -1,6 +1,6 @@
 import { cube3x3x3 } from "../vendor/cubing/puzzles/index.js";
 import { CROSS_GOAL, MOVES, SETUPS, mapScramble } from "./cross-solver.js";
-import { parseMoves } from "./moves.js";
+import { parseFaceMoves as parseMoves } from "./moves.js";
 
 const puzzle = await cube3x3x3.kpuzzle();
 const cornerMoves = new Uint8Array(24 * 18);
