@@ -46,6 +46,37 @@ function controls() {
   $("replayBtn").disabled = !total;
   $("previewStatus").textContent =
     current === total ? "最终状态" : current === 0 ? "复原状态" : "打乱过程";
+  // Lets the scramble text highlight the move currently shown in 3D.
+  window.dispatchEvent(
+    new CustomEvent("scramble-progress", {
+      detail: { current, total, open: !panel.hidden },
+    }),
+  );
+}
+
+// Three.js (legacy build) is only needed for Square-1; load it on first use.
+let legacyThreeJob = null;
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.append(script);
+  });
+}
+function loadLegacyThree() {
+  if (window.THREE && window.THREE.OrbitControls) return Promise.resolve(true);
+  return (legacyThreeJob ||= (async () => {
+    if (!window.THREE) await loadScriptOnce("vendor/legacy-three/three.min.js");
+    if (!window.THREE.OrbitControls)
+      await loadScriptOnce("vendor/legacy-three/OrbitControls.js");
+    return true;
+  })().catch((error) => {
+    console.error(error);
+    legacyThreeJob = null;
+    return false;
+  }));
 }
 function resetCamera() {
   const coordinates = /^(?:[2-7]x[2-7]|3x3oh)$/.test(type)
@@ -148,6 +179,14 @@ async function loadScramble(alg) {
   total = current = 0;
   controls();
   if (type === "sq1") {
+    if (!window.THREE) $("viewerMessage").textContent = "正在加载 SQ1 预览…";
+    const loaded = await loadLegacyThree();
+    if (token !== revision) return;
+    if (!loaded) {
+      $("viewerMessage").textContent = "SQ1 预览加载失败，请刷新页面重试。";
+      return;
+    }
+    window.Sq1Viewer?.show();
     window.Sq1Viewer?.applyScramble(alg);
     const state = window.Sq1Playback?.getState();
     total = state?.total || 0;
@@ -191,12 +230,17 @@ window.addEventListener("change-puzzle", (event) => {
   const sq1 = type === "sq1";
   $("viewHint").textContent =
     sq1 || /^(?:[2-7]x[2-7]|3x3oh)$/.test(type)
-      ? "白顶 · 绿前 · 红右｜拖动旋转"
-      : "拖动旋转视角";
+      ? "白顶、绿前、红右，拖动可旋转"
+      : "拖动可旋转视角";
   player.style.display = sq1 ? "none" : "grid";
   $("sq1Viewer").style.display = sq1 ? "flex" : "none";
-  if (sq1) window.Sq1Viewer?.show();
-  else {
+  if (sq1) {
+    const token = revision;
+    loadLegacyThree().then((loaded) => {
+      if (loaded && token === revision && type === "sq1")
+        window.Sq1Viewer?.show();
+    });
+  } else {
     window.Sq1Viewer?.hide();
     if (ready) {
       player.alg = "";

@@ -109,6 +109,7 @@ for (let index = 0; index < 2; index++) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = move;
+      button.dataset.face = face;
       button.setAttribute("aria-label", `转动 ${move}`);
       button.addEventListener("click", () => {
         if (applyInput(index)) setState(index, [...states[index], move]);
@@ -137,7 +138,8 @@ document.querySelector("[data-use-scramble]").addEventListener("click", () => {
     return;
   }
   try {
-    setState(0, parse($("displayText").textContent));
+    const display = $("displayText");
+    setState(0, parse(display.dataset.scramble || display.textContent));
   } catch (error) {
     message(0, error.message, true);
   }
@@ -181,7 +183,7 @@ $("solveStatesBtn").addEventListener("click", async () => {
   } finally {
     busy = false;
     button.disabled = false;
-    button.textContent = "求解转换公式 →";
+    button.textContent = "求解转换公式";
   }
 });
 $("copySolutionBtn").addEventListener("click", async () => {

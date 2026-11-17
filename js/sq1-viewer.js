@@ -623,9 +623,13 @@ window.Sq1Viewer = (function () {
   }
 
   function renderLoop() {
-    animationFrame = requestAnimationFrame(renderLoop);
-    if (!container || container.offsetParent === null || document.hidden)
+    // Stop scheduling frames while the viewer is hidden (other puzzle, lab tab,
+    // background tab). ensureLoop() restarts it when the viewer is needed again.
+    if (!container || container.offsetParent === null || document.hidden) {
+      animationFrame = 0;
       return;
+    }
+    animationFrame = requestAnimationFrame(renderLoop);
     updateScrambleAnimation(performance.now());
     if (controls) {
       controls.update();
@@ -633,12 +637,26 @@ window.Sq1Viewer = (function () {
     renderer.render(scene, camera);
   }
 
+  function ensureLoop() {
+    if (renderer && !animationFrame) {
+      animationFrame = requestAnimationFrame(renderLoop);
+    }
+  }
+  document.addEventListener("visibilitychange", ensureLoop);
+  window.addEventListener("workspace-change", () =>
+    requestAnimationFrame(ensureLoop),
+  );
+
   // Expose playback methods for the unified controller
   window.Sq1Playback = {
-    toggle: togglePlayback,
+    toggle: function () {
+      togglePlayback();
+      ensureLoop();
+    },
     pause: pausePlayback,
     seekTo: function (idx) {
       rebuildToStep(Number(idx));
+      ensureLoop();
     },
     refreshControls: updatePlaybackControls,
     getState: function () {
@@ -704,7 +722,7 @@ window.Sq1Viewer = (function () {
       window.addEventListener("resize", resize);
     }
     resize();
-    renderLoop();
+    ensureLoop();
     updatePlaybackControls();
   }
 
@@ -725,6 +743,7 @@ window.Sq1Viewer = (function () {
     rebuildToStep(allMoves.length);
     updateStandalone3dLink(scramble);
     renderer.render(scene, camera);
+    ensureLoop();
   }
 
   function applyScrambleAnimated(scramble) {
@@ -745,6 +764,7 @@ window.Sq1Viewer = (function () {
     updateStandalone3dLink(scramble);
     updatePlaybackControls();
     renderer.render(scene, camera);
+    ensureLoop();
   }
 
   function show() {
@@ -758,6 +778,8 @@ window.Sq1Viewer = (function () {
         renderer.render(scene, camera);
       }
       resize();
+      // offsetParent is only non-null after layout; restart on the next frame.
+      requestAnimationFrame(ensureLoop);
     }
   }
 

@@ -1,4 +1,5 @@
 const STORAGE_KEY = "cubeTimer.solveTimes.v1";
+const EVENT_STORAGE_KEY = "cubeTimer.event.v1";
 const EVENT_TYPES = [
   "2x2",
   "3x3",
@@ -13,25 +14,14 @@ const EVENT_TYPES = [
   "skewb",
   "sq1",
 ];
+const NXN_TYPES = /^(?:[2-7]x[2-7]|3x3oh)$/;
 const SCRAMBLE_BUFFER_SIZE = 10;
 
-let solveTimesMap = {
-  "2x2": [],
-  "3x3": [],
-  "3x3oh": [],
-  "4x4": [],
-  "5x5": [],
-  "6x6": [],
-  "7x7": [],
-  clock: [],
-  minx: [],
-  pyram: [],
-  skewb: [],
-  sq1: [],
-};
+let solveTimesMap = Object.fromEntries(EVENT_TYPES.map((type) => [type, []]));
 let timerState = "IDLE";
 let startTime = 0;
 let activeInterval = null;
+let activeFrame = 0;
 let scrambleGenerationToken = 0;
 let appInitialized = false;
 const scrambleStateMap = Object.fromEntries(
@@ -45,6 +35,23 @@ const scrambleStateMap = Object.fromEntries(
   ]),
 );
 
+/* ==========================================================================
+   Timer text width estimate (tabular figures) — lets us size the numerals
+   without measuring the DOM on every frame.
+   ========================================================================== */
+function estimateTimerWidthEm(text) {
+  let em = 0;
+  for (const ch of String(text)) {
+    if (/[0-9]/.test(ch)) em += 0.56;
+    else if (ch === "." || ch === ":") em += 0.27;
+    else em += 0.66; // D, N, F
+  }
+  return em;
+}
+
+/* ==========================================================================
+   Storage
+   ========================================================================== */
 function normalizeSq1Scramble(scramble) {
   return String(scramble || "")
     .replace(/`/g, "")
@@ -78,9 +85,30 @@ function loadStoredTimes() {
 }
 
 function saveStoredTimes() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(solveTimesMap));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(solveTimesMap));
+  } catch (e) {
+    console.warn("Failed to save solve times", e);
+  }
 }
 
+function loadStoredEvent() {
+  try {
+    const type = localStorage.getItem(EVENT_STORAGE_KEY);
+    if (EVENT_TYPES.includes(type))
+      document.getElementById("cubeType").value = type;
+  } catch {}
+}
+
+function saveStoredEvent(type) {
+  try {
+    localStorage.setItem(EVENT_STORAGE_KEY, type);
+  } catch {}
+}
+
+/* ==========================================================================
+   Scramble generation
+   ========================================================================== */
 function generateScrambleStr(type) {
   const modifiers = ["", "'", "2"];
   let n = parseInt(type[0]);
@@ -250,6 +278,9 @@ async function fillScrambleBuffer(type) {
     ) {
       // Let the current preview paint before preparing another cached scramble.
       await waitForBackgroundTurn();
+      // Never compete with a live solve for the main thread.
+      while (!["IDLE", "STOPPED"].includes(timerState))
+        await new Promise((resolve) => setTimeout(resolve, 250));
       state.scrambles.push(await createScrambleForType(type));
     }
   } finally {
@@ -274,10 +305,89 @@ async function ensureVisibleScramble(type) {
   return state.scrambles[state.currentIndex];
 }
 
+/* ==========================================================================
+   Scramble display (one chip per move so playback can highlight it)
+   ========================================================================== */
+let scrambleTokens = [];
+
+function tokenizeLine(line, type) {
+  if (type === "sq1") {
+    return line.match(/\(\s*-?\d+\s*,\s*-?\d+\s*\)\s*\/?|\/|\S+/g) || [];
+  }
+  return line.split(/\s+/).filter(Boolean);
+}
+
+function renderScrambleText(scramble) {
+  const el = document.getElementById("displayText");
+  const type = getCurrentType();
+  const lines = String(scramble || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const fragment = document.createDocumentFragment();
+  scrambleTokens = [];
+  lines.forEach((line, lineIndex) => {
+    const host = lines.length > 1 ? document.createElement("span") : fragment;
+    if (lines.length > 1) host.className = "mv-line";
+    tokenizeLine(line, type).forEach((token, i) => {
+      if (i) host.append(" ");
+      const chip = document.createElement("span");
+      chip.className = "mv";
+      chip.textContent = token.trim();
+      scrambleTokens.push(chip);
+      host.append(chip);
+    });
+    if (lines.length > 1) {
+      fragment.append(host);
+      if (lineIndex < lines.length - 1) fragment.append("\n");
+    }
+  });
+  el.replaceChildren(fragment);
+  el.dataset.scramble = scramble;
+  delete el.dataset.step;
+  const count = scrambleTokens.length;
+  el.dataset.size = count <= 25 ? "m" : count <= 50 ? "l" : "xl";
+  const meta = document.getElementById("scrambleMeta");
+  if (meta)
+    meta.textContent = NXN_TYPES.test(type) && count ? `${count} 步` : "";
+}
+
+function getCurrentScramble() {
+  const el = document.getElementById("displayText");
+  return el.dataset.scramble || el.textContent || "";
+}
+
+let lastProgressKey = "";
+window.addEventListener("scramble-progress", (event) => {
+  const { current, total, open } = event.detail || {};
+  const el = document.getElementById("displayText");
+  const active = open && total > 0 && total === scrambleTokens.length;
+  const key = active ? `${current}/${total}` : "off";
+  if (key === lastProgressKey) return;
+  lastProgressKey = key;
+  if (!active) {
+    delete el.dataset.step;
+    scrambleTokens.forEach((chip) => chip.classList.remove("done", "current"));
+    return;
+  }
+  el.dataset.step = current;
+  scrambleTokens.forEach((chip, i) => {
+    chip.classList.toggle("done", i < current - 1);
+    chip.classList.toggle("current", i === current - 1);
+  });
+  const currentChip = scrambleTokens[current - 1];
+  if (currentChip && el.scrollHeight > el.clientHeight) {
+    const top = currentChip.offsetTop - el.offsetTop;
+    if (top < el.scrollTop || top > el.scrollTop + el.clientHeight - 30)
+      el.scrollTop = Math.max(0, top - el.clientHeight / 2);
+  }
+});
+
 function showScramble(scramble) {
-  document.getElementById("displayText").innerText = scramble;
+  lastProgressKey = "";
+  renderScrambleText(scramble);
   const crossRes = document.getElementById("crossResult");
-  if (crossRes) crossRes.innerText = "";
+  if (crossRes) crossRes.textContent = "";
   applyScramble(scramble);
   updateScrambleNavButtons();
 }
@@ -351,6 +461,7 @@ function getCurrentType() {
 
 function changeCubeType() {
   const type = getCurrentType();
+  saveStoredEvent(type);
   window.dispatchEvent(new CustomEvent("change-puzzle", { detail: type }));
   document.getElementById("crossControls").hidden = !["3x3", "3x3oh"].includes(
     type,
@@ -359,6 +470,9 @@ function changeCubeType() {
   handleRandomScramble();
 }
 
+/* ==========================================================================
+   Results
+   ========================================================================== */
 function formatSolveTime(ms) {
   let totalSeconds = ms / 1000;
   let minutes = Math.floor(totalSeconds / 60);
@@ -379,7 +493,7 @@ function formatSolveResult(entry) {
   if (solve.penalty === "DNF") return "DNF";
   const finalTime = getFinalTime(solve);
   return solve.penalty === "+2"
-    ? `${formatSolveTime(finalTime)} +2`
+    ? `${formatSolveTime(finalTime)}+`
     : formatSolveTime(finalTime);
 }
 
@@ -390,50 +504,68 @@ function calculateMean(arr) {
   return formatSolveTime(sum / validTimes.length);
 }
 
-function calculateAo12(arr) {
-  if (arr.length < 12) return "-";
-  let last12 = arr
-    .slice(-12)
+// WCA-style average: drop the best and worst, mean the rest.
+function calculateAverageOf(arr, n) {
+  if (arr.length < n) return "-";
+  const sorted = arr
+    .slice(-n)
     .map(getFinalTime)
     .sort((a, b) => a - b);
-  let middle = last12.slice(1, 11);
+  const middle = sorted.slice(1, n - 1);
   if (middle.some((t) => !Number.isFinite(t))) return "DNF";
-  let sum = middle.reduce((a, b) => a + b, 0);
-  return formatSolveTime(sum / 10);
+  return formatSolveTime(middle.reduce((a, b) => a + b, 0) / middle.length);
+}
+
+function calculateAo12(arr) {
+  return calculateAverageOf(arr, 12);
+}
+
+function findBestIndex(arr) {
+  let best = -1;
+  let bestTime = Infinity;
+  arr.forEach((entry, i) => {
+    const t = getFinalTime(entry);
+    if (t < bestTime) {
+      bestTime = t;
+      best = i;
+    }
+  });
+  return best;
 }
 
 function updateStatistics() {
   const type = getCurrentType();
   const arr = solveTimesMap[type];
-  document.getElementById("countDisplay").innerText = arr.length;
-  document.getElementById("meanDisplay").innerText = calculateMean(arr);
-  document.getElementById("ao12Display").innerText = calculateAo12(arr);
-  let listHtml = "";
-  arr.forEach((t, index) => {
-    const solve = normalizeSolve(t);
-    const penaltyClass =
-      solve.penalty === "DNF"
-        ? "dnf-result"
-        : solve.penalty === "+2"
-          ? "plus-two-result"
-          : "";
-    listHtml =
-      `<li class="${penaltyClass}">
-            <span>${index + 1}. ${formatSolveResult(solve)}</span>
-            <div class="time-actions">
-                <button class="${solve.penalty === "OK" ? "active" : ""}" onclick="setPenalty(${index}, 'OK'); this.blur();">OK</button>
-                <button class="${solve.penalty === "+2" ? "active" : ""}" onclick="setPenalty(${index}, '+2'); this.blur();">+2</button>
-                <button class="${solve.penalty === "DNF" ? "active" : ""}" onclick="setPenalty(${index}, 'DNF'); this.blur();">DNF</button>
-                <button class="delete-btn" onclick="deleteTime(${index}); this.blur();">×</button>
-            </div>
-        </li>` + listHtml;
-  });
-  document.getElementById("timeList").innerHTML = listHtml;
+  const bestIndex = findBestIndex(arr);
+  document.getElementById("countDisplay").textContent = arr.length;
+  document.getElementById("meanDisplay").textContent = calculateMean(arr);
+  document.getElementById("ao5Display").textContent = calculateAverageOf(
+    arr,
+    5,
+  );
+  document.getElementById("ao12Display").textContent = calculateAo12(arr);
+  document.getElementById("bestDisplay").textContent =
+    bestIndex >= 0 ? formatSolveTime(getFinalTime(arr[bestIndex])) : "-";
+
+  const fragment = document.createDocumentFragment();
+  for (let index = arr.length - 1; index >= 0; index--) {
+    const solve = normalizeSolve(arr[index]);
+    const li = document.createElement("li");
+    li.dataset.index = index;
+    if (solve.penalty === "DNF") li.className = "dnf-result";
+    else if (solve.penalty === "+2") li.className = "plus-two-result";
+    if (index === bestIndex) li.dataset.best = "";
+    li.innerHTML = `<span class="time-index">${index + 1}</span><span class="time-value"></span><div class="time-actions"><button type="button" data-penalty="OK" aria-pressed="${solve.penalty === "OK"}">OK</button><button type="button" data-penalty="+2" aria-pressed="${solve.penalty === "+2"}">+2</button><button type="button" data-penalty="DNF" aria-pressed="${solve.penalty === "DNF"}">DNF</button><button type="button" class="delete-btn" data-delete aria-label="删除第 ${index + 1} 次成绩">×</button></div>`;
+    li.querySelector(".time-value").textContent = formatSolveResult(solve);
+    fragment.append(li);
+  }
+  document.getElementById("timeList").replaceChildren(fragment);
   document.getElementById("emptyTimes").hidden = arr.length > 0;
 }
 
 function setPenalty(index, penalty) {
   const type = getCurrentType();
+  if (!solveTimesMap[type][index]) return;
   solveTimesMap[type][index] = {
     ...normalizeSolve(solveTimesMap[type][index]),
     penalty,
@@ -450,6 +582,7 @@ function deleteTime(index) {
 
 function clearCurrentTimes() {
   const type = getCurrentType();
+  if (!solveTimesMap[type].length) return;
   if (confirm(`确定要清空该项目的所有成绩吗？`)) {
     solveTimesMap[type] = [];
     saveStoredTimes();
@@ -457,64 +590,92 @@ function clearCurrentTimes() {
   }
 }
 
+/* ==========================================================================
+   Timer display
+   ========================================================================== */
+const TIMER_LABELS = {
+  idle: "准备好就开始",
+  ready: "松开即开始计时",
+  running: "计时中",
+  stopped: "完成，继续下一次",
+  inspecting: "观察中，按住准备",
+  dnf: "观察超时，请重试",
+};
+let currentTimerText = "";
+let fittedUnits = 0;
+
 function setTimerClass(className) {
-  const el = document.getElementById("timerDisplay");
-  el.className = className || "";
-  const labels = {
-    ready: "松开空格，开始计时",
-    running: "专注当下",
-    stopped: "完成！继续下一次",
-    inspecting: "观察中 · 按住空格准备",
-    dnf: "观察结束，请重试",
-  };
+  const state = className || "idle";
+  const card = document.getElementById("timerCard");
+  if (card) card.dataset.state = state;
   document.getElementById("timerStatus").textContent =
-    labels[className] || "准备好下一次突破";
-  const busy = ["ready", "running", "inspecting"].includes(className);
+    TIMER_LABELS[state] || TIMER_LABELS.idle;
+  const busy = ["ready", "running", "inspecting"].includes(state);
+  document.body.classList.toggle("is-timing", busy);
   document.getElementById("cubeType").disabled = busy;
   document.getElementById("labTab").disabled = busy;
   document.getElementById("appearanceBtn").disabled = busy;
   updateScrambleNavButtons();
-  fitTimerDisplay();
+  fitTimerDisplay(true);
 }
 
 function getTimerBaseFontSize() {
-  return window.matchMedia("(max-width: 480px)").matches ? 64 : 104;
+  const card = document.getElementById("timerCard");
+  // Fullscreen focus mode on phones/tablets
+  if (card && getComputedStyle(card).position === "fixed") return 200;
+  return window.matchMedia("(max-width: 680px)").matches ? 96 : 132;
 }
 
-function fitTimerDisplay() {
+// Width of "00.000" — keep sub-minute times the same size so the numerals never jump.
+const REFERENCE_UNITS = estimateTimerWidthEm("00.000");
+
+function fitTimerDisplay(force = false) {
   const el = document.getElementById("timerDisplay");
   if (!el) return;
-
-  const baseSize = getTimerBaseFontSize();
-  const minSize = 28;
-  el.style.fontSize = `${baseSize}px`;
+  const units = Math.max(
+    REFERENCE_UNITS,
+    estimateTimerWidthEm(currentTimerText),
+  );
+  if (!force && units === fittedUnits) return;
+  fittedUnits = units;
 
   const available = el.clientWidth;
-  if (available <= 0 || el.scrollWidth <= available) return;
-
-  let fittedSize = Math.max(
-    minSize,
-    Math.floor((baseSize * available) / el.scrollWidth),
-  );
-  el.style.fontSize = `${fittedSize}px`;
-  while (fittedSize > minSize && el.scrollWidth > available) {
-    fittedSize -= 1;
-    el.style.fontSize = `${fittedSize}px`;
+  const base = getTimerBaseFontSize();
+  if (available <= 0) {
+    el.style.fontSize = `${base}px`;
+    return;
   }
+  // Also respect screen height in focus mode / landscape.
+  const maxByHeight = Math.max(40, window.innerHeight * 0.38);
+  const size = Math.max(
+    28,
+    Math.floor(Math.min(base, maxByHeight, (available * 0.94) / units)),
+  );
+  el.style.fontSize = `${size}px`;
 }
 
 function setTimerText(value) {
   const el = document.getElementById("timerDisplay");
   if (!el) return;
-  el.innerText = value;
+  const text = String(value);
+  if (text === currentTimerText) return;
+  currentTimerText = text;
+  el.textContent = text;
   fitTimerDisplay();
+}
+
+function stopTicking() {
+  clearInterval(activeInterval);
+  activeInterval = null;
+  cancelAnimationFrame(activeFrame);
+  activeFrame = 0;
 }
 
 function updateInspection() {
   let elapsed = performance.now() - startTime;
   let left = 15 - Math.floor(elapsed / 1000);
   if (left <= 0) {
-    clearInterval(activeInterval);
+    stopTicking();
     setTimerText("DNF");
     setTimerClass("dnf");
     timerState = "IDLE";
@@ -523,36 +684,40 @@ function updateInspection() {
   }
 }
 
+function getSelectedCrossColor() {
+  const checked = document.querySelector('input[name="crossColor"]:checked');
+  return checked ? checked.value : "white";
+}
+
 function solveCross() {
+  const result = document.getElementById("crossResult");
   const type = document.getElementById("cubeType").value;
   if (!["3x3", "3x3oh"].includes(type)) {
-    document.getElementById("crossResult").innerText =
-      "提示：目前仅支持 3x3x3 魔方的 Cross 求解。";
+    result.textContent = "目前仅支持三阶的 Cross 求解。";
     return;
   }
 
-  const currentScramble = document.getElementById("displayText").innerText;
+  const currentScramble = getCurrentScramble();
   if (!currentScramble) {
-    document.getElementById("crossResult").innerText =
-      "请先生成或输入打乱公式！";
+    result.textContent = "打乱还在生成，请稍后再试。";
     return;
   }
 
-  const color = document.getElementById("crossColor").value;
-  document.getElementById("crossResult").innerText = "计算中...";
+  const color = getSelectedCrossColor();
+  result.textContent = "计算中…";
 
   setTimeout(() => {
     const start = performance.now();
     const solution = window.CrossSolver.solveBest(currentScramble, color);
-    const timeTook = (performance.now() - start).toFixed(2);
-    document.getElementById("crossResult").innerText =
-      `${solution} (耗时: ${timeTook}ms)`;
+    const timeTook = (performance.now() - start).toFixed(1);
+    result.textContent = `${solution}（${timeTook} ms）`;
   }, 10);
 }
 
-function updateTimer() {
-  let currentTime = performance.now() - startTime;
-  setTimerText(formatSolveTime(currentTime));
+function runningFrame() {
+  if (timerState !== "RUNNING") return;
+  setTimerText(formatSolveTime(performance.now() - startTime));
+  activeFrame = requestAnimationFrame(runningFrame);
 }
 
 function isTimerControlBlockedTarget(target) {
@@ -576,17 +741,17 @@ function pressTimerControl() {
 
   if (timerState === "IDLE") {
     timerState = "INSPECTING";
-    setTimerClass("inspecting");
     setTimerText("15");
+    setTimerClass("inspecting");
     startTime = performance.now();
     activeInterval = setInterval(updateInspection, 100);
   } else if (timerState === "INSPECTING") {
     timerState = "READY";
     setTimerClass("ready");
   } else if (timerState === "RUNNING") {
-    clearInterval(activeInterval);
+    const finalTime = performance.now() - startTime;
+    stopTicking();
     timerState = "STOPPED";
-    let finalTime = performance.now() - startTime;
     solveTimesMap[getCurrentType()].push({
       time: finalTime,
       penalty: "OK",
@@ -610,17 +775,21 @@ function releaseTimerControl() {
     return;
 
   if (timerState === "READY") {
-    clearInterval(activeInterval);
+    stopTicking();
     timerState = "RUNNING";
+    setTimerText("0.000");
     setTimerClass("running");
     startTime = performance.now();
-    activeInterval = setInterval(updateTimer, 10);
+    activeFrame = requestAnimationFrame(runningFrame);
   } else if (timerState === "STOPPED") {
     timerState = "IDLE";
     setTimerClass("");
   }
 }
 
+/* ==========================================================================
+   Input
+   ========================================================================== */
 window.addEventListener("keydown", (e) => {
   if (window.activeWorkspace === "lab") return;
   if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
@@ -643,21 +812,6 @@ window.addEventListener("keydown", (e) => {
     }
   }
 });
-
-function bindScrambleControls() {
-  const prevBtn = document.getElementById("prevScrambleBtn");
-  const nextBtn = document.getElementById("nextScrambleBtn");
-  if (prevBtn)
-    prevBtn.addEventListener("click", () => {
-      prevBtn.blur();
-      stepScramble(-1, true);
-    });
-  if (nextBtn)
-    nextBtn.addEventListener("click", () => {
-      nextBtn.blur();
-      stepScramble(1, true);
-    });
-}
 
 window.addEventListener("keyup", (e) => {
   if (window.activeWorkspace === "lab") return;
@@ -708,18 +862,87 @@ window.addEventListener("pointercancel", (e) => {
   }
 });
 
+// Long-press on iOS/Android must not open a context menu while holding to start.
+document.addEventListener("contextmenu", (e) => {
+  if (e.target.closest && e.target.closest(".timer-card")) e.preventDefault();
+});
+
+function blurAfterPointer(element) {
+  // Keep keyboard focus for keyboard users; drop it after mouse/touch so Space
+  // goes straight back to the timer.
+  let fromPointer = false;
+  element.addEventListener("pointerdown", () => (fromPointer = true));
+  element.addEventListener("change", (e) => {
+    if (fromPointer && e.target.blur) e.target.blur();
+    fromPointer = false;
+  });
+}
+
+function bindControls() {
+  const prevBtn = document.getElementById("prevScrambleBtn");
+  const nextBtn = document.getElementById("nextScrambleBtn");
+  prevBtn.addEventListener("click", () => {
+    prevBtn.blur();
+    stepScramble(-1, true);
+  });
+  nextBtn.addEventListener("click", () => {
+    nextBtn.blur();
+    stepScramble(1, true);
+  });
+
+  const cubeType = document.getElementById("cubeType");
+  cubeType.addEventListener("change", () => {
+    changeCubeType();
+    cubeType.blur();
+  });
+
+  const solveBtn = document.getElementById("solveCrossBtn");
+  solveBtn.addEventListener("click", () => {
+    solveCross();
+    solveBtn.blur();
+  });
+  blurAfterPointer(document.getElementById("crossColor"));
+
+  const clearBtn = document.getElementById("clearTimesBtn");
+  clearBtn.addEventListener("click", () => {
+    clearCurrentTimes();
+    clearBtn.blur();
+  });
+
+  document.getElementById("timeList").addEventListener("click", (e) => {
+    const button = e.target.closest("button");
+    const li = e.target.closest("li[data-index]");
+    if (!button || !li) return;
+    const index = Number(li.dataset.index);
+    if (button.hasAttribute("data-delete")) deleteTime(index);
+    else if (button.dataset.penalty) setPenalty(index, button.dataset.penalty);
+    // The list was re-rendered; make sure Space returns to the timer.
+    if (document.activeElement && document.activeElement !== document.body)
+      document.activeElement.blur();
+  });
+}
+
+let resizeFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => fitTimerDisplay(true));
+});
+
 function init() {
   if (window.viewerLoaded) {
     if (appInitialized) return;
     appInitialized = true;
     loadStoredTimes();
-    bindScrambleControls();
-    fitTimerDisplay();
+    loadStoredEvent();
     changeCubeType();
   } else {
     setTimeout(init, 50);
   }
 }
-init();
 
-window.addEventListener("resize", fitTimerDisplay);
+// Paint the idle LCD and stats immediately, before the 3D modules arrive.
+setTimerText("0.000");
+setTimerClass("");
+bindControls();
+updateStatistics();
+init();

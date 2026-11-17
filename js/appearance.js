@@ -5,8 +5,11 @@
   try {
     Object.assign(settings, JSON.parse(localStorage.getItem(key)) || {});
   } catch {}
+  const themeColors = { mist: "#f4f6f9", sand: "#faf6ef", forest: "#f1f7f3" };
   function apply() {
     document.body.dataset.theme = settings.theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = themeColors[settings.theme] || themeColors.mist;
     document.body.classList.toggle("has-wallpaper", !!settings.wallpaper);
     document.body.style.setProperty(
       "--wallpaper",
