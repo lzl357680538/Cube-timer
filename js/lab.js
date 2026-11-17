@@ -14,6 +14,7 @@ function initializeLabViewers() {
       if (attribute.name !== "data-lazy-player")
         viewer.setAttribute(attribute.name, attribute.value);
     }
+    viewer.setAttribute("visualization", "PG3D");
     placeholder.replaceWith(viewer);
   });
 }

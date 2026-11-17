@@ -246,6 +246,9 @@ window.addEventListener("change-puzzle", (event) => {
       player.alg = "";
       player.experimentalSetupAlg = "";
       player.puzzle = puzzleMap[type] || "3x3x3";
+      // Use the same opaque black foundation as other stickered puzzles.
+      player.visualization = "PG3D";
+      player.experimentalFaceletScale = type === "skewb" ? 0.85 : "auto";
       resetCamera();
     }
   }

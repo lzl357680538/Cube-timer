@@ -386,8 +386,7 @@ window.addEventListener("scramble-progress", (event) => {
 function showScramble(scramble) {
   lastProgressKey = "";
   renderScrambleText(scramble);
-  const crossRes = document.getElementById("crossResult");
-  if (crossRes) crossRes.textContent = "";
+  clearCrossResult();
   applyScramble(scramble);
   updateScrambleNavButtons();
 }
@@ -460,6 +459,7 @@ function getCurrentType() {
 }
 
 function changeCubeType() {
+  clearCrossResult();
   const type = getCurrentType();
   saveStoredEvent(type);
   window.dispatchEvent(new CustomEvent("change-puzzle", { detail: type }));
@@ -689,11 +689,18 @@ function getSelectedCrossColor() {
   return checked ? checked.value : "white";
 }
 
-function solveCross() {
+let crossSolveSequence = 0;
+function clearCrossResult() {
+  crossSolveSequence++;
+  document.getElementById("crossResult").textContent = "";
+}
+
+async function solveCross(xcross = false) {
+  const token = ++crossSolveSequence;
   const result = document.getElementById("crossResult");
   const type = document.getElementById("cubeType").value;
   if (!["3x3", "3x3oh"].includes(type)) {
-    result.textContent = "目前仅支持三阶的 Cross 求解。";
+    result.textContent = "目前仅支持三阶的 Cross / XCross 求解。";
     return;
   }
 
@@ -706,12 +713,18 @@ function solveCross() {
   const color = getSelectedCrossColor();
   result.textContent = "计算中…";
 
-  setTimeout(() => {
-    const start = performance.now();
-    const solution = window.CrossSolver.solveBest(currentScramble, color);
+  const start = performance.now();
+  try {
+    const solution = await (xcross
+      ? window.CrossSolver.solveXCross(currentScramble, color)
+      : window.CrossSolver.solveBest(currentScramble, color));
+    if (token !== crossSolveSequence) return;
     const timeTook = (performance.now() - start).toFixed(1);
     result.textContent = `${solution}（${timeTook} ms）`;
-  }, 10);
+  } catch (error) {
+    if (token === crossSolveSequence)
+      result.textContent = "求解失败：" + error.message;
+  }
 }
 
 function runningFrame() {
@@ -902,6 +915,14 @@ function bindControls() {
     solveBtn.blur();
   });
   blurAfterPointer(document.getElementById("crossColor"));
+  document
+    .getElementById("crossColor")
+    .addEventListener("change", clearCrossResult);
+  const xcrossBtn = document.getElementById("solveXCrossBtn");
+  xcrossBtn.addEventListener("click", () => {
+    solveCross(true);
+    xcrossBtn.blur();
+  });
 
   const clearBtn = document.getElementById("clearTimesBtn");
   clearBtn.addEventListener("click", () => {

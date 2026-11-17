@@ -8,8 +8,8 @@
     "test": "node --test tests/*.test.cjs",
     "postinstall": "node tools/prepare.cjs",
     "prepare:assets": "node tools/prepare.cjs",
-    "format": "prettier --write index.html sq1-3d.html css/style.css js/script.js js/sq1-viewer.js js/appearance.js js/lab.js js/moves.js js/playback.js js/state-engine.js tools/*.cjs tests/*.cjs README.md package.json",
-    "format:check": "prettier --check index.html sq1-3d.html css/style.css js/script.js js/sq1-viewer.js js/appearance.js js/lab.js js/moves.js js/playback.js js/state-engine.js tools/*.cjs tests/*.cjs README.md package.json",
+    "format": "prettier --write index.html sq1-3d.html css/style.css js/script.js js/sq1-viewer.js js/appearance.js js/lab.js js/moves.js js/playback.js js/state-engine.js js/cross-*.js js/xcross-solver.js tools/*.cjs tests/*.cjs README.md package.json",
+    "format:check": "prettier --check index.html sq1-3d.html css/style.css js/script.js js/sq1-viewer.js js/appearance.js js/lab.js js/moves.js js/playback.js js/state-engine.js js/cross-*.js js/xcross-solver.js tools/*.cjs tests/*.cjs README.md package.json",
     "build": "node tools/build.cjs"
   },
   "dependencies": {
