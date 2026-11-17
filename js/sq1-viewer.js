@@ -116,9 +116,9 @@ window.Sq1Viewer = (function () {
     ],
   ];
 
-  // csTimer maps SQ1 colors from colsq1 [U,R,F,D,L,B] to twisty face order [U,L,F,R,B,D].
+  // Standard scramble orientation: U white, F green, R red. Face order: U,L,F,R,B,D.
   const faceColors = [
-    0xffe11f, 0x2563eb, 0xef4444, 0x22c55e, 0xff8a00, 0xffffff,
+    0xffffff, 0xff8800, 0x00ff00, 0xff0000, 0x2255ff, 0xffff00,
   ];
   const indexSide = ["U", "L", "F", "R", "B", "D"];
 
@@ -231,13 +231,14 @@ window.Sq1Viewer = (function () {
     return true;
   }
 
+  let cachedAxes;
   function axisList() {
-    return [
+    return (cachedAxes ||= [
       new THREE.Vector3(Math.cos(TAU / 24), 0, Math.sin(TAU / 24)).normalize(),
       new THREE.Vector3(0, 1, 0),
       new THREE.Vector3(0, -1, 0),
       new THREE.Vector3(Math.sin(TAU / 24), 0, -Math.cos(TAU / 24)).normalize(),
-    ];
+    ]);
   }
 
   function advanceMove(move) {
@@ -406,8 +407,13 @@ window.Sq1Viewer = (function () {
     }
 
     const targetStep = Math.max(0, Math.min(step, allMoves.length));
-    clearScene(false);
-    buildCube();
+    if (!root) buildCube();
+    // Restore matrices on existing meshes; do not reallocate geometry/materials.
+    cubePieces.flat().forEach((sticker) => {
+      sticker.base.copy(sticker.solved);
+      sticker.object.matrix.copy(sticker.solved);
+      sticker.object.updateMatrixWorld(true);
+    });
     for (let i = 0; i < targetStep; i++) {
       allMoves[i].forEach(advanceMove);
     }
@@ -573,7 +579,11 @@ window.Sq1Viewer = (function () {
         sticker.matrix.copy(transform);
         sticker.updateMatrixWorld(true);
         root.add(sticker);
-        facePieces.push({ base: transform.clone(), object: sticker });
+        facePieces.push({
+          base: transform.clone(),
+          solved: transform.clone(),
+          object: sticker,
+        });
       }
     }
 
@@ -661,7 +671,7 @@ window.Sq1Viewer = (function () {
     scene.background = null;
 
     camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.position.set(6.8, 7.2, 9.2);
+    camera.position.set(8, 8, 8);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -705,6 +715,13 @@ window.Sq1Viewer = (function () {
     }
 
     allMoves = parseScramble(scramble);
+    // Each new scramble starts from the same reference view, regardless of drag.
+    camera.position.set(8, 8, 8);
+    camera.lookAt(0, 0, 0);
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
     rebuildToStep(allMoves.length);
     updateStandalone3dLink(scramble);
     renderer.render(scene, camera);

@@ -7,12 +7,25 @@ let libraries,
   version = 0,
   busy = false;
 const storageKey = "cubeTimer.lab.v1";
+function initializeLabViewers() {
+  document.querySelectorAll("[data-lazy-player]").forEach((placeholder) => {
+    const viewer = document.createElement("twisty-player");
+    for (const attribute of placeholder.attributes) {
+      if (attribute.name !== "data-lazy-player")
+        viewer.setAttribute(attribute.name, attribute.value);
+    }
+    placeholder.replaceWith(viewer);
+  });
+}
 function getLibraries() {
   return (libraries ||= Promise.all([
     import("./state-engine.js"),
     import("../vendor/cubing/twisty/index.js"),
   ])
-    .then(([engine]) => engine)
+    .then(([engine]) => {
+      initializeLabViewers();
+      return engine;
+    })
     .catch((error) => {
       libraries = null;
       throw error;

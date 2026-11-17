@@ -231,6 +231,13 @@ async function createScrambleForType(type) {
   return generateScrambleStr(type);
 }
 
+function waitForBackgroundTurn() {
+  return new Promise((resolve) => {
+    if (window.requestIdleCallback)
+      window.requestIdleCallback(resolve, { timeout: 150 });
+    else setTimeout(resolve, 16);
+  });
+}
 async function fillScrambleBuffer(type) {
   const state = scrambleStateMap[type];
   if (!state || state.filling) return;
@@ -241,6 +248,8 @@ async function fillScrambleBuffer(type) {
       state.scrambles.length < SCRAMBLE_BUFFER_SIZE ||
       state.scrambles.length <= state.currentIndex + SCRAMBLE_BUFFER_SIZE
     ) {
+      // Let the current preview paint before preparing another cached scramble.
+      await waitForBackgroundTurn();
       state.scrambles.push(await createScrambleForType(type));
     }
   } finally {
@@ -283,6 +292,7 @@ async function handleRandomScramble() {
 
 async function stepScramble(direction, force = false) {
   if (!force && !canNavigateScrambles()) return;
+  const token = ++scrambleGenerationToken;
 
   const type = getCurrentType();
   const state = scrambleStateMap[type];
@@ -291,6 +301,7 @@ async function stepScramble(direction, force = false) {
   if (state.currentIndex < 0) {
     await ensureVisibleScramble(type);
   }
+  if (token !== scrambleGenerationToken || type !== getCurrentType()) return;
 
   if (direction < 0) {
     if (state.currentIndex > 0) {
@@ -304,6 +315,7 @@ async function stepScramble(direction, force = false) {
   if (!state.scrambles[nextIndex]) {
     state.scrambles.push(await createScrambleForType(type));
   }
+  if (token !== scrambleGenerationToken || type !== getCurrentType()) return;
   state.currentIndex = nextIndex;
   showScramble(state.scrambles[state.currentIndex]);
   fillScrambleBuffer(type);

@@ -147,11 +147,13 @@
               control-panel="none"
               hint-facelets="none"
               tempo-scale="2"
+              camera-latitude="35.264389682754654"
+              camera-longitude="45"
             ></twisty-player>
             <div id="sq1Viewer" class="sq1-viewer" style="display: none"></div>
           </div>
           <div class="preview-caption">
-            <span>拖动旋转视角</span
+            <span id="viewHint">白顶 · 绿前 · 红右｜拖动旋转</span
             ><button type="button" id="replayBtn" class="text-btn">
               ↻ 查看打乱过程
             </button>
@@ -254,14 +256,17 @@
             </button>
           </div>
           <div class="lab-viewer">
-            <twisty-player
+            <div
+              data-lazy-player
               id="stateViewer0"
               puzzle="3x3x3"
               background="none"
               control-panel="none"
               hint-facelets="none"
               tempo-scale="2"
-            ></twisty-player>
+              camera-latitude="35.264389682754654"
+              camera-longitude="45"
+            ></div>
           </div>
           <div class="state-toolbar">
             <button type="button" data-undo="0" disabled>↶ 撤销一步</button
@@ -294,14 +299,17 @@
             </button>
           </div>
           <div class="lab-viewer">
-            <twisty-player
+            <div
+              data-lazy-player
               id="stateViewer1"
               puzzle="3x3x3"
               background="none"
               control-panel="none"
               hint-facelets="none"
               tempo-scale="2"
-            ></twisty-player>
+              camera-latitude="35.264389682754654"
+              camera-longitude="45"
+            ></div>
           </div>
           <div class="state-toolbar">
             <button type="button" data-undo="1" disabled>↶ 撤销一步</button
@@ -348,14 +356,17 @@
             ><button type="button" id="playSolutionBtn">▶ 播放转换</button>
           </div>
           <div id="solutionPreview" hidden>
-            <twisty-player
+            <div
+              data-lazy-player
               id="solutionViewer"
               puzzle="3x3x3"
               background="none"
               control-panel="none"
               hint-facelets="none"
               tempo-scale="2"
-            ></twisty-player>
+              camera-latitude="35.264389682754654"
+              camera-longitude="45"
+            ></div>
           </div>
         </div>
       </section>
