@@ -858,6 +858,7 @@ body.has-wallpaper .solution-card {
 
 /* ---------- Preview ---------- */
 .preview-card {
+  background: var(--bg);
   padding: 14px 16px 10px;
   overflow: hidden;
 }
