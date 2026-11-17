@@ -259,7 +259,7 @@ window.addEventListener("change-puzzle", (event) => {
       player.alg = "";
       player.experimentalSetupAlg = "";
       player.puzzle = puzzleMap[type] || "3x3x3";
-      // All 3D puzzles share the same bright, foundation-free stickers.
+      // All 3D puzzles share black foundations and bright coloured stickers.
       player.visualization = "PG3D";
       resetCamera();
     }

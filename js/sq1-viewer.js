@@ -55,6 +55,72 @@ window.Sq1Viewer = (function () {
     [(0.5 + hsq3) / 2 - wg, hm - wg],
   ];
 
+  // Untrimmed silhouettes fill the sticker gaps without changing SQ1's pieces.
+  const foundations = new Map([
+    [
+      sp,
+      [
+        [0, 1],
+        [-0.5, -hsq3],
+        [0.5, -hsq3],
+      ],
+    ],
+    [
+      lp,
+      [
+        [1, 1],
+        [-hsq3, 0.5],
+        [-hsq3, -hsq3],
+        [0.5, -hsq3],
+      ],
+    ],
+    [
+      ss,
+      [
+        [-0.5, ws],
+        [-0.5, -ws],
+        [0.5, -ws],
+        [0.5, ws],
+      ],
+    ],
+    [
+      ls,
+      [
+        [-(0.5 + hsq3) / 2, ws],
+        [-(0.5 + hsq3) / 2, -ws],
+        [(0.5 + hsq3) / 2, -ws],
+        [(0.5 + hsq3) / 2, ws],
+      ],
+    ],
+    [
+      mf,
+      [
+        [-w, hm],
+        [-w, -hm],
+        [w, -hm],
+        [w, hm],
+      ],
+    ],
+    [
+      lm,
+      [
+        [-(1.5 + hsq3) / 2, hm],
+        [-(1.5 + hsq3) / 2, -hm],
+        [(1.5 + hsq3) / 2, -hm],
+        [(1.5 + hsq3) / 2, hm],
+      ],
+    ],
+    [
+      sm,
+      [
+        [-(0.5 + hsq3) / 2, hm],
+        [-(0.5 + hsq3) / 2, -hm],
+        [(0.5 + hsq3) / 2, -hm],
+        [(0.5 + hsq3) / 2, hm],
+      ],
+    ],
+  ]);
+
   const facelets = [
     [
       [sp, 0, -1, hh, 0],
@@ -177,7 +243,7 @@ window.Sq1Viewer = (function () {
     return new THREE.ShapeGeometry(shape);
   }
 
-  function makeSticker(points, material) {
+  function makeSticker(points, material, foundationMaterial) {
     const sticker = new THREE.Object3D();
     const geometry = makeShapeGeometry(points);
     const mesh = new THREE.Mesh(geometry, material);
@@ -193,6 +259,14 @@ window.Sq1Viewer = (function () {
     mesh.renderOrder = 2;
     sticker.add(mesh);
     sticker.add(edges);
+    const foundation = new THREE.Mesh(
+      makeShapeGeometry(foundations.get(points)),
+      foundationMaterial,
+    );
+    foundation.name = "sticker-foundation";
+    foundation.position.z = -0.012;
+    foundation.renderOrder = 1;
+    sticker.add(foundation);
     sticker.matrixAutoUpdate = false;
     return sticker;
   }
@@ -590,6 +664,10 @@ window.Sq1Viewer = (function () {
           side: THREE.DoubleSide,
         }),
     );
+    const foundationMaterial = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      side: THREE.DoubleSide,
+    });
 
     for (let faceIndex = 0; faceIndex < facelets.length; faceIndex++) {
       const facePieces = [];
@@ -601,7 +679,11 @@ window.Sq1Viewer = (function () {
         stickerIndex++
       ) {
         const facelet = facelets[faceIndex][stickerIndex];
-        const sticker = makeSticker(facelet[0], materials[faceIndex]);
+        const sticker = makeSticker(
+          facelet[0],
+          materials[faceIndex],
+          foundationMaterial,
+        );
         const side = indexSide[faceIndex];
         const rotation = new THREE.Matrix4().makeRotationAxis(
           sidesRotAxis[side],
@@ -628,6 +710,8 @@ window.Sq1Viewer = (function () {
         facePieces.push(record);
         // Geometry, outlines and opaque colours are shared, allocated only once.
         const floating = sticker.clone(true);
+        // Floating stickers are viewed from the back: keep black behind colour.
+        floating.getObjectByName("sticker-foundation").position.z = 0.012;
         floatingRoot.add(floating);
         floatingPieces.push({
           source: record,

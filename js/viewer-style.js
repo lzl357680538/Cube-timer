@@ -12,9 +12,9 @@ export function stylePuzzleViewer(viewer) {
   if (viewers.has(viewer)) return;
   const state = { floating: false, revision: 0 };
   viewers.set(viewer, state);
-  viewer.experimentalModel.twistySceneModel.foundationDisplay.set("none");
+  viewer.experimentalModel.twistySceneModel.foundationDisplay.set("auto");
   // Set this once, before geometry creation; PG3D cannot resize live stickers.
-  viewer.experimentalFaceletScale = 0.94;
+  viewer.experimentalFaceletScale = 0.9;
   viewer.hintFacelets = "none";
   viewer.experimentalModel.puzzleLoader.addFreshListener(async (loader) => {
     const revision = ++state.revision;
@@ -31,7 +31,7 @@ export function stylePuzzleViewer(viewer) {
           const puzzle = await wrapper.twisty3DPuzzle();
           if (revision !== state.revision) return;
           puzzle.experimentalUpdateOptions({
-            showFoundation: false,
+            showFoundation: true,
             hintStickerOpacity: 1,
             hintFacelets: state.floating ? "floating" : "none",
           });
