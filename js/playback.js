@@ -1,3 +1,4 @@
+import { stylePuzzleViewer, setFloatingFacelets } from "./viewer-style.js";
 const $ = (id) => document.getElementById(id);
 const player = $("cubeViewer");
 const panel = $("playbackPanel");
@@ -29,6 +30,16 @@ const puzzleMap = {
   skewb: "skewb",
 };
 function controls() {
+  if (ready)
+    setFloatingFacelets(
+      player,
+      type !== "sq1" &&
+        type !== "clock" &&
+        total > 0 &&
+        current === total &&
+        !playing &&
+        !seeking,
+    );
   slider.max = total;
   slider.value = current;
   slider.disabled = !total;
@@ -80,8 +91,10 @@ function loadLegacyThree() {
 }
 function resetCamera() {
   const coordinates = /^(?:[2-7]x[2-7]|3x3oh)$/.test(type)
-    ? { latitude: 35.264389682754654, longitude: 45 }
-    : "auto";
+    ? { latitude: 35.264389682754654, longitude: 45, distance: 7.5 }
+    : type === "clock"
+      ? "auto"
+      : { distance: type === "minx" ? 8.1 : type === "pyram" ? 7.2 : 7.5 };
   player.experimentalModel.twistySceneModel.orbitCoordinatesRequest.set(
     coordinates,
   );
@@ -246,9 +259,8 @@ window.addEventListener("change-puzzle", (event) => {
       player.alg = "";
       player.experimentalSetupAlg = "";
       player.puzzle = puzzleMap[type] || "3x3x3";
-      // Use the same opaque black foundation as other stickered puzzles.
+      // All 3D puzzles share the same bright, foundation-free stickers.
       player.visualization = "PG3D";
-      player.experimentalFaceletScale = type === "skewb" ? 0.85 : "auto";
       resetCamera();
     }
   }
@@ -316,7 +328,7 @@ try {
   ({ Alg, Move, Pause } = notation);
   ready = true;
   player.controlPanel = "none";
-  player.hintFacelets = "none";
+  stylePuzzleViewer(player);
   player.experimentalModel.detailedTimelineInfo.addFreshListener((info) => {
     if (type === "sq1" || !total || !timelineReady || seeking) return;
     current = info.atEnd

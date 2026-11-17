@@ -130,6 +130,9 @@ window.Sq1Viewer = (function () {
   let viewport;
   let root;
   let cubePieces;
+  let floatingRoot;
+  let floatingPieces = [];
+  let floatingCamera;
   let animationFrame;
   let allMoves = [];
   let currentMoveIndex = 0;
@@ -381,6 +384,7 @@ window.Sq1Viewer = (function () {
   }
 
   function updatePlaybackControls() {
+    updateFloatingStickers();
     window.dispatchEvent(
       new CustomEvent("sq1-playback-update", {
         detail: {
@@ -390,6 +394,36 @@ window.Sq1Viewer = (function () {
         },
       }),
     );
+  }
+
+  function updateFloatingStickers() {
+    if (!floatingRoot) return;
+    floatingRoot.visible =
+      allMoves.length > 0 && currentMoveIndex === allMoves.length && !isPlaying;
+    if (!floatingRoot.visible) return;
+    for (const piece of floatingPieces) {
+      // Derive the copy from the final sticker matrix, including shape changes.
+      // Never add these copies to the physical pieces used by the SQ1 moves.
+      piece.normal.set(0, 0, 1).transformDirection(piece.source.base);
+      piece.position.setFromMatrixPosition(piece.source.base);
+      piece.object.matrix.copy(piece.source.base);
+      piece.object.matrix.elements[12] += piece.normal.x * amp;
+      piece.object.matrix.elements[13] += piece.normal.y * amp;
+      piece.object.matrix.elements[14] += piece.normal.z * amp;
+      piece.object.updateMatrixWorld(true);
+    }
+    updateFloatingVisibility();
+  }
+
+  function updateFloatingVisibility() {
+    if (!floatingRoot?.visible) return;
+    root.updateMatrixWorld(true);
+    root.worldToLocal(floatingCamera.copy(camera.position));
+    for (const piece of floatingPieces) {
+      // Only reveal surfaces facing away from the current camera.
+      piece.object.visible =
+        piece.normal.dot(floatingCamera) - piece.normal.dot(piece.position) < 0;
+    }
   }
 
   function resetAnimationState() {
@@ -539,8 +573,15 @@ window.Sq1Viewer = (function () {
     ];
 
     root = new THREE.Object3D();
+    root.name = "square1-stickers";
     root.scale.setScalar(0.5);
     cubePieces = [];
+    floatingPieces = [];
+    floatingRoot = new THREE.Object3D();
+    floatingRoot.name = "floating-facelets";
+    floatingRoot.visible = false;
+    floatingCamera = new THREE.Vector3();
+    root.add(floatingRoot);
 
     const materials = faceColors.map(
       (color) =>
@@ -579,10 +620,20 @@ window.Sq1Viewer = (function () {
         sticker.matrix.copy(transform);
         sticker.updateMatrixWorld(true);
         root.add(sticker);
-        facePieces.push({
+        const record = {
           base: transform.clone(),
           solved: transform.clone(),
           object: sticker,
+        };
+        facePieces.push(record);
+        // Geometry, outlines and opaque colours are shared, allocated only once.
+        const floating = sticker.clone(true);
+        floatingRoot.add(floating);
+        floatingPieces.push({
+          source: record,
+          object: floating,
+          normal: new THREE.Vector3(),
+          position: new THREE.Vector3(),
         });
       }
     }
@@ -597,17 +648,19 @@ window.Sq1Viewer = (function () {
 
     if (root) {
       scene.remove(root);
+      const geometries = new Set();
+      const materials = new Set();
       root.traverse((object) => {
-        if (object.geometry) {
-          object.geometry.dispose();
-        }
-        if (object.material) {
-          object.material.dispose();
-        }
+        if (object.geometry) geometries.add(object.geometry);
+        if (object.material) materials.add(object.material);
       });
+      geometries.forEach((geometry) => geometry.dispose());
+      materials.forEach((material) => material.dispose());
     }
     root = null;
     cubePieces = null;
+    floatingRoot = null;
+    floatingPieces = [];
   }
 
   function resize() {
@@ -713,6 +766,7 @@ window.Sq1Viewer = (function () {
       controls.minDistance = 3.2;
       controls.maxDistance = 10;
       controls.target.set(0, -0.08, 0);
+      controls.addEventListener("change", updateFloatingVisibility);
     }
 
     if (window.ResizeObserver) {

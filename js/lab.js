@@ -1,4 +1,5 @@
 import { parseMoves as parse } from "./moves.js";
+import { stylePuzzleViewer } from "./viewer-style.js";
 const $ = (id) => document.getElementById(id);
 const states = [[], []];
 let libraries,
@@ -15,6 +16,7 @@ function initializeLabViewers() {
         viewer.setAttribute(attribute.name, attribute.value);
     }
     viewer.setAttribute("visualization", "PG3D");
+    stylePuzzleViewer(viewer);
     placeholder.replaceWith(viewer);
   });
 }
