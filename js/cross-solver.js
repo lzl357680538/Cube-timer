@@ -200,6 +200,6 @@ export class CrossSolver {
 
   solveBest(scramble, color) {
     const { setup, algorithm } = this.solveBestResult(scramble, color);
-    return [setup, algorithm || "(已完成)"].filter(Boolean).join("   ");
+    return [setup, algorithm].filter(Boolean).join(" ");
   }
 }

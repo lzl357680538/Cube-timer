@@ -43,6 +43,10 @@ function controls() {
   slider.max = total;
   slider.value = current;
   slider.disabled = !total;
+  slider.style.setProperty(
+    "--slider-pct",
+    total > 0 ? `${((current / total) * 100).toFixed(2)}%` : "0%",
+  );
   $("stepCounter").textContent = `${current} / ${total}`;
   $("playPauseBtn").textContent = playing
     ? "暂停"

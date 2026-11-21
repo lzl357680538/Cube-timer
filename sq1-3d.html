@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Square-1 3D</title>
+    <title>Square-1 3D · Cube Space Studio</title>
     <link rel="stylesheet" href="css/style.css" />
     <style>
       body {
@@ -12,45 +12,55 @@
         display: grid;
         place-items: center;
         padding: 24px;
-        background: linear-gradient(
-          135deg,
-          #eef4ff 0%,
-          #f8faff 52%,
-          #fff7ec 100%
-        );
       }
 
       .sq1-standalone {
         width: min(960px, 100%);
+        padding: 22px 24px;
+        border-radius: var(--r-xl);
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        box-shadow: inset 0 1px 0 var(--bevel-top), var(--shadow-card);
       }
 
       .sq1-standalone-title {
         margin: 0 0 14px;
-        color: var(--text-primary);
+        color: var(--ink);
+        font-family: var(--font-num);
         font-size: 22px;
+        font-weight: 700;
         text-align: center;
       }
 
       .sq1-standalone-scramble {
         margin: 0 0 18px;
         padding: 14px 18px;
-        border: 1.5px solid var(--border-color);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        background: rgba(255, 255, 255, 0.82);
-        color: var(--text-primary);
-        font-family: var(--font-mono);
-        font-size: clamp(14px, 2vw, 20px);
-        line-height: 1.6;
+        background: var(--surface-sunken);
+        color: var(--ink);
+        font-family: var(--font-alg);
+        font-size: clamp(14px, 2vw, 19px);
+        line-height: 1.65;
         text-align: center;
-        box-shadow: var(--shadow-card);
       }
 
       .sq1-standalone .sq1-viewer {
-        height: min(72vh, 680px);
+        height: min(68vh, 640px);
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background:
+          radial-gradient(
+            ellipse 68% 62% at 50% 48%,
+            var(--stage-spot-inner) 0%,
+            var(--stage-spot-mid) 46%,
+            transparent 78%
+          ),
+          var(--surface-sunken);
       }
     </style>
   </head>
-  <body>
+  <body data-theme="obsidian" data-mode="dark">
     <main class="sq1-standalone">
       <h1 class="sq1-standalone-title">Square-1 3D</h1>
       <div id="standaloneScramble" class="sq1-standalone-scramble"></div>

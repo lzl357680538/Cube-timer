@@ -104,12 +104,10 @@ export function solveXCrossResult(solver, scramble, color = "white") {
 }
 
 export function solveXCross(solver, scramble, color) {
-  const { setup, algorithm, length } = solveXCrossResult(
+  const { setup, algorithm } = solveXCrossResult(
     solver,
     scramble,
     color,
   );
-  return [setup, algorithm || "(已完成)", `［${length} 步，含右前 F2L］`]
-    .filter(Boolean)
-    .join("   ");
+  return [setup, algorithm].filter(Boolean).join(" ");
 }

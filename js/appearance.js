@@ -1,23 +1,61 @@
 (() => {
   const $ = (id) => document.getElementById(id);
-  const key = "cubeTimer.appearance.v1";
-  let settings = { theme: "mist", wallpaper: "", shade: 35 };
+  const key = "cubeTimer.studio.appearance.v1";
+  const DARK_THEMES = new Set(["obsidian", "carbon", "midnight"]);
+  const themeColors = {
+    obsidian: "#0b0e14",
+    carbon: "#0c0d0e",
+    midnight: "#090b16",
+    mist: "#edf1f7",
+    sand: "#f6f1e8",
+    forest: "#ebf3ee",
+  };
+  let settings = {
+    theme: "mist",
+    lastDark: "obsidian",
+    lastLight: "mist",
+    wallpaper: "",
+    shade: 35,
+  };
   try {
     Object.assign(settings, JSON.parse(localStorage.getItem(key)) || {});
   } catch {}
-  const themeColors = { mist: "#f4f6f9", sand: "#faf6ef", forest: "#f1f7f3" };
+  if (!themeColors[settings.theme]) settings.theme = "mist";
+
   function apply() {
+    const isDark = DARK_THEMES.has(settings.theme);
     document.body.dataset.theme = settings.theme;
+    document.body.dataset.mode = isDark ? "dark" : "light";
+    if (isDark) settings.lastDark = settings.theme;
+    else settings.lastLight = settings.theme;
+
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = themeColors[settings.theme] || themeColors.mist;
+
     document.body.classList.toggle("has-wallpaper", !!settings.wallpaper);
     document.body.style.setProperty(
       "--wallpaper",
       settings.wallpaper ? `url("${settings.wallpaper}")` : "none",
     );
     document.body.style.setProperty("--wallpaper-shade", settings.shade / 100);
-    $("wallpaperShade").value = settings.shade;
-    $("shadeValue").value = `${settings.shade}%`;
+
+    const shadeSlider = $("wallpaperShade");
+    if (shadeSlider) {
+      shadeSlider.value = settings.shade;
+      shadeSlider.style.setProperty(
+        "--slider-pct",
+        `${(settings.shade / 80) * 100}%`,
+      );
+    }
+    if ($("shadeValue")) $("shadeValue").value = `${settings.shade}%`;
+
+    const modeBtn = $("themeModeBtn");
+    if (modeBtn) {
+      const label = isDark ? "切换到浅色工作台" : "切换到深色工作室";
+      modeBtn.title = label;
+      modeBtn.setAttribute("aria-label", label);
+    }
+
     document.querySelectorAll("[data-theme]").forEach((btn) => {
       if (btn.tagName === "BUTTON")
         btn.setAttribute(
@@ -26,6 +64,7 @@
         );
     });
   }
+
   function save() {
     try {
       localStorage.setItem(key, JSON.stringify(settings));
@@ -36,6 +75,20 @@
       return false;
     }
   }
+
+  const modeBtn = $("themeModeBtn");
+  if (modeBtn) {
+    modeBtn.addEventListener("click", () => {
+      const isDark = DARK_THEMES.has(settings.theme);
+      settings.theme = isDark
+        ? settings.lastLight || "mist"
+        : settings.lastDark || "obsidian";
+      apply();
+      save();
+      modeBtn.blur();
+    });
+  }
+
   $("appearanceBtn").addEventListener("click", () =>
     $("appearanceDialog").showModal(),
   );
@@ -103,5 +156,6 @@
     }
     e.target.value = "";
   });
+
   apply();
 })();

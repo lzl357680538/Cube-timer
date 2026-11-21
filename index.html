@@ -6,8 +6,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#f4f6f9" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#edf1f7" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Cube Space" />
@@ -15,140 +15,270 @@
       name="description"
       content="魔方计时训练与三阶状态实验室：打乱预览、观察计时、成绩统计与状态转换求解。"
     />
-    <title>Cube Space · 魔方训练与状态实验室</title>
+    <title>Cube Space Studio · 魔方训练与状态实验室</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c2531'/%3E%3Cg%3E%3Crect x='3.5' y='3.5' width='7.5' height='7.5' rx='1.6' fill='%23f4f4ee'/%3E%3Crect x='12.25' y='3.5' width='7.5' height='7.5' rx='1.6' fill='%23009b48'/%3E%3Crect x='21' y='3.5' width='7.5' height='7.5' rx='1.6' fill='%23f4f4ee'/%3E%3Crect x='3.5' y='12.25' width='7.5' height='7.5' rx='1.6' fill='%23ff6a00'/%3E%3Crect x='12.25' y='12.25' width='7.5' height='7.5' rx='1.6' fill='%23f4f4ee'/%3E%3Crect x='21' y='12.25' width='7.5' height='7.5' rx='1.6' fill='%230046ad'/%3E%3Crect x='3.5' y='21' width='7.5' height='7.5' rx='1.6' fill='%23f4f4ee'/%3E%3Crect x='12.25' y='21' width='7.5' height='7.5' rx='1.6' fill='%23ffd000'/%3E%3Crect x='21' y='21' width='7.5' height='7.5' rx='1.6' fill='%23c41e3a'/%3E%3C/g%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111620'/%3E%3Cg%3E%3Crect x='3.5' y='3.5' width='7.5' height='7.5' rx='1.8' fill='%23f4f4ee'/%3E%3Crect x='12.25' y='3.5' width='7.5' height='7.5' rx='1.8' fill='%2300b359'/%3E%3Crect x='21' y='3.5' width='7.5' height='7.5' rx='1.8' fill='%23f4f4ee'/%3E%3Crect x='3.5' y='12.25' width='7.5' height='7.5' rx='1.8' fill='%23ff7518'/%3E%3Crect x='12.25' y='12.25' width='7.5' height='7.5' rx='1.8' fill='%23f4f4ee'/%3E%3Crect x='21' y='12.25' width='7.5' height='7.5' rx='1.8' fill='%232563eb'/%3E%3Crect x='3.5' y='21' width='7.5' height='7.5' rx='1.8' fill='%23f4f4ee'/%3E%3Crect x='12.25' y='21' width='7.5' height='7.5' rx='1.8' fill='%23ffd426'/%3E%3Crect x='21' y='21' width='7.5' height='7.5' rx='1.8' fill='%23e11d48'/%3E%3C/g%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
     />
     <link rel="modulepreload" href="js/playback.js" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body>
+  <body data-theme="mist" data-mode="light">
     <header class="site-header">
       <a class="brand" href="./" aria-label="Cube Space 首页">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="7" fill="#1c2531" />
-          <rect
-            x="3.5"
-            y="3.5"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#f4f4ee"
-          />
-          <rect
-            x="12.25"
-            y="3.5"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#009b48"
-          />
-          <rect
-            x="21"
-            y="3.5"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#f4f4ee"
-          />
-          <rect
-            x="3.5"
-            y="12.25"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#ff6a00"
-          />
-          <rect
-            x="12.25"
-            y="12.25"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#f4f4ee"
-          />
-          <rect
-            x="21"
-            y="12.25"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#0046ad"
-          />
-          <rect
-            x="3.5"
-            y="21"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#f4f4ee"
-          />
-          <rect
-            x="12.25"
-            y="21"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#ffd000"
-          />
-          <rect
-            x="21"
-            y="21"
-            width="7.5"
-            height="7.5"
-            rx="1.6"
-            fill="#c41e3a"
-          />
-        </svg>
-        <span class="brand-text"
-          ><span class="brand-name">Cube<b>Space</b></span
-          ><small>每一次，快一点。</small></span
-        >
+        <span class="brand-mark-wrap">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="#131924" />
+            <rect
+              x="0.5"
+              y="0.5"
+              width="31"
+              height="31"
+              rx="7.5"
+              fill="none"
+              stroke="rgba(255,255,255,0.12)"
+            />
+            <rect
+              x="4"
+              y="4"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#f4f4ee"
+            />
+            <rect
+              x="12.4"
+              y="4"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#00b359"
+            />
+            <rect
+              x="20.8"
+              y="4"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#f4f4ee"
+            />
+            <rect
+              x="4"
+              y="12.4"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#ff7518"
+            />
+            <rect
+              x="12.4"
+              y="12.4"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#f4f4ee"
+            />
+            <rect
+              x="20.8"
+              y="12.4"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#2563eb"
+            />
+            <rect
+              x="4"
+              y="20.8"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#f4f4ee"
+            />
+            <rect
+              x="12.4"
+              y="20.8"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#ffd426"
+            />
+            <rect
+              x="20.8"
+              y="20.8"
+              width="7.2"
+              height="7.2"
+              rx="1.8"
+              fill="#e11d48"
+            />
+          </svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-name"
+            >Cube<b>Space</b><em class="brand-tag">STUDIO</em></span
+          >
+          <small>每一次，快一点。</small>
+        </span>
       </a>
+
       <nav class="workspace-tabs" aria-label="工作区">
-        <button type="button" id="timerTab" aria-pressed="true">计时训练</button
-        ><button type="button" id="labTab" aria-pressed="false">
+        <button type="button" id="timerTab" aria-pressed="true">
+          <svg class="tab-icon" viewBox="0 0 18 18" aria-hidden="true">
+            <circle
+              cx="9"
+              cy="10"
+              r="5.75"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M9 6.75V10l2.2 1.3M7 2.25h4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          计时训练
+        </button>
+        <button type="button" id="labTab" aria-pressed="false">
+          <svg class="tab-icon" viewBox="0 0 18 18" aria-hidden="true">
+            <path
+              d="M9 2.25 14.75 5.5v7L9 15.75 3.25 12.5v-7L9 2.25Z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.45"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M3.5 5.6 9 8.9l5.5-3.3M9 8.9v6.6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.45"
+              stroke-linejoin="round"
+            />
+          </svg>
           状态实验室<span>3×3</span>
         </button>
       </nav>
-      <button
-        type="button"
-        id="appearanceBtn"
-        class="ghost-btn"
-        aria-haspopup="dialog"
-        aria-label="外观设置"
-      >
-        <svg viewBox="0 0 20 20" aria-hidden="true">
-          <circle
-            cx="10"
-            cy="10"
-            r="7.25"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5Z" fill="currentColor" />
-        </svg>
-        <span>外观</span>
-      </button>
+
+      <div class="header-actions">
+        <button
+          type="button"
+          id="themeModeBtn"
+          class="icon-btn"
+          title="切换明暗主题"
+          aria-label="切换明暗主题"
+        >
+          <svg class="icon-sun" viewBox="0 0 20 20" aria-hidden="true">
+            <circle
+              cx="10"
+              cy="10"
+              r="3.6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+            <path
+              d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 20 20" aria-hidden="true">
+            <path
+              d="M15.6 12.4A6.5 6.5 0 0 1 7.6 4.4a6.5 6.5 0 1 0 8 8Z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          id="appearanceBtn"
+          class="ghost-btn"
+          aria-haspopup="dialog"
+          aria-label="外观设置"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <circle
+              cx="10"
+              cy="10"
+              r="7.25"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5Z" fill="currentColor" />
+          </svg>
+          <span>外观</span>
+        </button>
+      </div>
     </header>
 
     <main class="workspace" id="timerWorkspace">
       <div class="main-area">
-        <!-- 1. 打乱公式：移动端始终位于最上方 -->
+        <!-- 1. 打乱公式 -->
         <section class="scramble-card" aria-labelledby="scrambleHeading">
           <div class="scramble-head">
             <label class="visually-hidden" for="cubeType">训练项目</label>
             <div class="event-picker">
+              <svg class="picker-icon" viewBox="0 0 18 18" aria-hidden="true">
+                <rect
+                  x="2.25"
+                  y="2.25"
+                  width="5.5"
+                  height="5.5"
+                  rx="1.2"
+                  fill="currentColor"
+                  opacity="0.9"
+                />
+                <rect
+                  x="10.25"
+                  y="2.25"
+                  width="5.5"
+                  height="5.5"
+                  rx="1.2"
+                  fill="currentColor"
+                  opacity="0.45"
+                />
+                <rect
+                  x="2.25"
+                  y="10.25"
+                  width="5.5"
+                  height="5.5"
+                  rx="1.2"
+                  fill="currentColor"
+                  opacity="0.45"
+                />
+                <rect
+                  x="10.25"
+                  y="10.25"
+                  width="5.5"
+                  height="5.5"
+                  rx="1.2"
+                  fill="currentColor"
+                  opacity="0.9"
+                />
+              </svg>
               <select id="cubeType">
-                <option value="2x2">2x2x2</option>
-                <option value="3x3" selected>3x3x3</option>
-                <option value="3x3oh">3x3x3 单手</option>
-                <option value="4x4">4x4x4</option>
-                <option value="5x5">5x5x5</option>
-                <option value="6x6">6x6x6</option>
-                <option value="7x7">7x7x7</option>
+                <option value="2x2">2×2×2</option>
+                <option value="3x3" selected>3×3×3</option>
+                <option value="3x3oh">3×3×3 单手</option>
+                <option value="4x4">4×4×4</option>
+                <option value="5x5">5×5×5</option>
+                <option value="6x6">6×6×6</option>
+                <option value="7x7">7×7×7</option>
                 <option value="clock">魔表 Clock</option>
                 <option value="minx">五魔方 Megaminx</option>
                 <option value="pyram">金字塔 Pyraminx</option>
@@ -157,28 +287,79 @@
               </select>
             </div>
             <h2 id="scrambleHeading" class="scramble-title">
-              打乱<span id="scrambleMeta"></span>
+              <span class="title-label">SCRAMBLE</span>
+              <span id="scrambleMeta" class="scramble-meta-pill"></span>
             </h2>
             <div class="scramble-nav">
               <button
                 type="button"
-                id="prevScrambleBtn"
-                class="nav-btn"
-                aria-keyshortcuts="ArrowLeft"
-                title="上一条（←）"
-                disabled
+                id="copyScrambleBtn"
+                class="nav-btn icon-only-sm"
+                title="复制打乱公式"
+                aria-label="复制打乱公式"
               >
-                <span aria-hidden="true">‹</span> 上一条
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <rect
+                    x="6.25"
+                    y="6.25"
+                    width="8.5"
+                    height="8.5"
+                    rx="1.75"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.45"
+                  />
+                  <path
+                    d="M4.25 11.75h-.5A1.5 1.5 0 0 1 2.25 10.25v-6.5a1.5 1.5 0 0 1 1.5-1.5h6.5a1.5 1.5 0 0 1 1.5 1.5v.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.45"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <span class="nav-label">复制</span>
               </button>
-              <button
-                type="button"
-                id="nextScrambleBtn"
-                class="nav-btn"
-                aria-keyshortcuts="ArrowRight"
-                title="下一条（→）"
-              >
-                下一条 <span aria-hidden="true">›</span>
-              </button>
+              <div class="nav-segmented">
+                <button
+                  type="button"
+                  id="prevScrambleBtn"
+                  class="nav-btn"
+                  aria-keyshortcuts="ArrowLeft"
+                  title="上一条（←）"
+                  disabled
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path
+                      d="M10 3.5 5.5 8 10 12.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span class="nav-label">上一条</span>
+                </button>
+                <button
+                  type="button"
+                  id="nextScrambleBtn"
+                  class="nav-btn"
+                  aria-keyshortcuts="ArrowRight"
+                  title="下一条（→）"
+                >
+                  <span class="nav-label">下一条</span>
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path
+                      d="M6 3.5 10.5 8 6 12.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
               <a
                 id="twLink"
                 class="tw-link"
@@ -186,16 +367,29 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 title="在 Twizzle 中打开"
-                >Twizzle <span aria-hidden="true">↗</span></a
               >
+                Twizzle
+                <svg viewBox="0 0 14 14" aria-hidden="true">
+                  <path
+                    d="M4.5 9.5 9.5 4.5M5.5 4.5h4v4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
+
           <div
             class="scramble-display"
             id="displayText"
             aria-live="polite"
             data-size="m"
           ></div>
+
           <div class="cross-tools" id="crossControls">
             <span class="cross-label" aria-hidden="true">Cross 底色</span>
             <fieldset class="cross-colors" id="crossColor">
@@ -252,23 +446,31 @@
                 ></label
               >
             </fieldset>
-            <button type="button" id="solveCrossBtn" class="text-btn">
-              求解 Cross
-            </button>
-            <button type="button" id="solveXCrossBtn" class="text-btn">
-              求解 XCross
-            </button>
-            <output id="crossResult"></output>
+            <div class="cross-btns">
+              <button type="button" id="solveCrossBtn" class="pill-btn">
+                求解 Cross
+              </button>
+              <button type="button" id="solveXCrossBtn" class="pill-btn">
+                求解 XCross
+              </button>
+            </div>
+            <div class="cross-result-wrap">
+              <output id="crossResult" title="点击复制步骤"></output>
+            </div>
           </div>
         </section>
 
-        <!-- 2. 打乱状态预览：移动端紧随打乱公式 -->
+        <!-- 2. 打乱状态 3D 展示舱 -->
         <section class="preview-card" aria-labelledby="previewHeading">
           <div class="card-head">
-            <h2 id="previewHeading">打乱状态</h2>
+            <div class="card-head-title">
+              <h2 id="previewHeading">打乱状态</h2>
+              <span class="card-subtitle">3D VIEWPORT</span>
+            </div>
             <span class="preview-badge" id="previewStatus">最终状态</span>
           </div>
           <div class="viewer-stage">
+            <div class="stage-reticle" aria-hidden="true"></div>
             <twisty-player
               id="cubeViewer"
               puzzle="3x3x3"
@@ -283,8 +485,15 @@
             <div id="sq1Viewer" class="sq1-viewer" style="display: none"></div>
           </div>
           <div class="preview-caption">
-            <span id="viewHint">白顶、绿前、红右，拖动可旋转</span
-            ><button type="button" id="replayBtn" class="text-btn">
+            <span class="hint-with-dots">
+              <span class="axis-dots" aria-hidden="true">
+                <i style="--c: var(--st-white)"></i>
+                <i style="--c: var(--st-green)"></i>
+                <i style="--c: var(--st-red)"></i>
+              </span>
+              <span id="viewHint">白顶、绿前、红右，拖动可旋转</span>
+            </span>
+            <button type="button" id="replayBtn" class="text-btn replay-trigger">
               ↻ 查看打乱过程
             </button>
           </div>
@@ -306,20 +515,40 @@
               <button
                 type="button"
                 id="startStepBtn"
+                class="transport-btn"
                 aria-label="回到起点"
                 title="回到起点"
                 disabled
               >
-                ⏮
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path
+                    d="M4.5 4.25v9.5M13.5 4.75 7.5 9l6 4.25v-8.5Z"
+                    fill="currentColor"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linejoin="round"
+                    stroke-linecap="round"
+                  />
+                </svg>
               </button>
               <button
                 type="button"
                 id="prevStepBtn"
+                class="transport-btn"
                 aria-label="上一步"
                 title="上一步"
                 disabled
               >
-                ‹
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path
+                    d="M11.25 4.5 6.75 9l4.5 4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </button>
               <button
                 type="button"
@@ -332,20 +561,40 @@
               <button
                 type="button"
                 id="nextStepBtn"
+                class="transport-btn"
                 aria-label="下一步"
                 title="下一步"
                 disabled
               >
-                ›
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path
+                    d="M6.75 4.5 11.25 9l-4.5 4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </button>
               <button
                 type="button"
                 id="endStepBtn"
+                class="transport-btn"
                 aria-label="查看最终状态"
                 title="查看最终状态"
                 disabled
               >
-                ⏭
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path
+                    d="M13.5 4.25v9.5M4.5 4.75 10.5 9l-6 4.25v-8.5Z"
+                    fill="currentColor"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linejoin="round"
+                    stroke-linecap="round"
+                  />
+                </svg>
               </button>
               <button type="button" id="closePlaybackBtn" class="text-btn">
                 收起
@@ -357,28 +606,18 @@
           </p>
         </section>
 
-        <!-- 3. 计时器：状态用整块颜色表达（橙=观察，绿=准备，蓝=计时） -->
+        <!-- 3. 计时器（保持纯粹简洁，仅展示时间，状态用整块颜色表达） -->
         <section
           class="timer-card"
           id="timerCard"
           data-state="idle"
           aria-label="计时器"
         >
-          <p class="timer-status">
-            <span class="state-dot" aria-hidden="true"></span
-            ><span id="timerStatus">准备好就开始</span>
-          </p>
+          <span id="timerStatus" class="visually-hidden">准备好就开始</span>
           <div id="timerDisplay" role="timer" aria-live="off">0.000</div>
-          <p class="timer-instruction">
-            <span class="for-keys"
-              >按空格开始观察，再次按住空格，松开即开始计时</span
-            ><span class="for-touch"
-              >轻触这里开始观察，再次按住，松手即开始计时</span
-            >
-          </p>
         </section>
 
-        <!-- 4. 统计 -->
+        <!-- 4. 成绩统计仪表盘 -->
         <section class="stats-board" aria-label="成绩统计">
           <div class="stat stat-best" style="--dot: var(--st-yellow)">
             <span>最佳</span><strong id="bestDisplay">-</strong>
@@ -397,10 +636,13 @@
           </div>
         </section>
 
-        <!-- 5. 成绩列表 -->
+        <!-- 5. 成绩记录与趋势曲线 -->
         <section class="times-card" aria-labelledby="timesHeading">
           <div class="card-head">
-            <h2 id="timesHeading">成绩</h2>
+            <div class="card-head-title">
+              <h2 id="timesHeading">成绩记录</h2>
+              <span class="card-subtitle">SESSION LOG</span>
+            </div>
             <button
               type="button"
               id="clearTimesBtn"
@@ -409,16 +651,38 @@
               清空
             </button>
           </div>
+
+          <div class="trend-chart-wrap" id="trendChartWrap" hidden>
+            <div class="trend-chart-head">
+              <span class="trend-legend">
+                <i class="legend-dot solve"></i>单次
+                <i class="legend-dot ao5"></i>ao5 趋势
+              </span>
+              <span class="trend-range" id="trendRange"></span>
+            </div>
+            <svg
+              id="trendChart"
+              class="trend-svg"
+              viewBox="0 0 420 88"
+              preserveAspectRatio="none"
+              aria-label="成绩变化趋势图"
+            ></svg>
+          </div>
+
           <ol id="timeList" reversed></ol>
-          <p class="empty-state" id="emptyTimes">
-            还没有成绩<span>完成第一次还原后，成绩会出现在这里。</span>
-          </p>
+          <div class="empty-state" id="emptyTimes">
+            <div class="empty-glyph" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <strong>还没有成绩记录</strong>
+            <span>按下空格键或轻触计时区，完成第一次还原后将自动生成统计与趋势曲线。</span>
+          </div>
         </section>
       </div>
 
       <div class="hint-bar" aria-hidden="true">
-        <span><kbd>Space</kbd> 观察、准备、停止</span>
-        <span><kbd>←</kbd> <kbd>→</kbd> 切换打乱</span>
+        <span><kbd>Space</kbd> 观察 · 准备 · 停止</span>
+        <span><kbd>←</kbd> <kbd>→</kbd> 切换打乱公式</span>
       </div>
     </main>
 
@@ -430,31 +694,45 @@
     >
       <div class="lab-intro">
         <div>
+          <span class="lab-eyebrow">3×3 STATE TRANSITION ENGINE</span>
           <h1 id="labTitle">从一个状态，到另一个状态。</h1>
-          <p>转动、记录、撤销。建立两个三阶状态，探索它们之间的路径。</p>
+          <p>转动、记录、撤销。建立两个三阶状态，探索它们之间的转换路径。</p>
         </div>
         <div class="lab-intro-actions">
           <span class="preview-badge">三阶 · 支持宽转、转体和中层</span>
           <button
             type="button"
             id="openAlgToolsBtn"
+            class="tool-trigger-btn"
             aria-haspopup="dialog"
             aria-controls="algorithmTools"
             aria-expanded="false"
           >
+            <svg viewBox="0 0 18 18" aria-hidden="true">
+              <path
+                d="M11.75 3.75 14.25 6.25 11.75 8.75M3.75 6.25h10.5M6.25 14.25 3.75 11.75 6.25 9.25M14.25 11.75H3.75"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
             公式工具
           </button>
         </div>
       </div>
+
       <div class="state-grid">
         <section class="state-card" data-state="0">
           <div class="card-head">
             <h2><span class="state-index">01</span> 起始状态</h2>
             <button type="button" class="text-btn" data-use-scramble="0">
-              使用当前三阶打乱
+              导入当前三阶打乱
             </button>
           </div>
           <div class="lab-viewer">
+            <div class="stage-reticle lab-reticle" aria-hidden="true"></div>
             <div
               data-lazy-player
               id="stateViewer0"
@@ -468,9 +746,9 @@
             ></div>
           </div>
           <div class="state-toolbar">
-            <button type="button" data-undo="0" disabled>↶ 撤销一步</button
-            ><button type="button" data-reset="0" class="text-btn">复原</button
-            ><span id="stateCount0">0 步</span>
+            <button type="button" data-undo="0" disabled>↶ 撤销一步</button>
+            <button type="button" data-reset="0" class="text-btn">复原</button>
+            <span id="stateCount0" class="step-pill">0 步</span>
           </div>
           <div
             id="moveModes0"
@@ -485,17 +763,19 @@
           ></div>
           <label for="stateInput0" class="input-label"
             >操作记录 / 输入公式</label
-          ><textarea
+          >
+          <textarea
             id="stateInput0"
             rows="3"
             placeholder="例如：r U R' U' M2 x（可不加空格）"
             spellcheck="false"
           ></textarea>
           <div class="state-input-footer">
-            <span id="stateMessage0" role="status">从复原状态开始</span
-            ><button type="button" data-apply="0">应用公式</button>
+            <span id="stateMessage0" role="status">从复原状态开始</span>
+            <button type="button" data-apply="0">应用公式</button>
           </div>
         </section>
+
         <section class="state-card" data-state="1">
           <div class="card-head">
             <h2><span class="state-index">02</span> 目标状态</h2>
@@ -504,6 +784,7 @@
             </button>
           </div>
           <div class="lab-viewer">
+            <div class="stage-reticle lab-reticle" aria-hidden="true"></div>
             <div
               data-lazy-player
               id="stateViewer1"
@@ -517,9 +798,9 @@
             ></div>
           </div>
           <div class="state-toolbar">
-            <button type="button" data-undo="1" disabled>↶ 撤销一步</button
-            ><button type="button" data-reset="1" class="text-btn">复原</button
-            ><span id="stateCount1">0 步</span>
+            <button type="button" data-undo="1" disabled>↶ 撤销一步</button>
+            <button type="button" data-reset="1" class="text-btn">复原</button>
+            <span id="stateCount1" class="step-pill">0 步</span>
           </div>
           <div
             id="moveModes1"
@@ -534,22 +815,27 @@
           ></div>
           <label for="stateInput1" class="input-label"
             >操作记录 / 输入公式</label
-          ><textarea
+          >
+          <textarea
             id="stateInput1"
             rows="3"
             placeholder="留空表示复原状态"
             spellcheck="false"
           ></textarea>
           <div class="state-input-footer">
-            <span id="stateMessage1" role="status">从复原状态开始</span
-            ><button type="button" data-apply="1">应用公式</button>
+            <span id="stateMessage1" role="status">从复原状态开始</span>
+            <button type="button" data-apply="1">应用公式</button>
           </div>
         </section>
       </div>
+
       <section class="solution-card">
         <div class="solution-heading">
           <div>
-            <h2>寻找转换公式 <span>01 → 02</span></h2>
+            <h2>
+              寻找转换公式
+              <span class="route-pill">01 → 02</span>
+            </h2>
             <p>使用后台求解器搜索较短路径，并校验终态。结果不保证最短。</p>
           </div>
           <button type="button" id="solveStatesBtn" class="primary-btn">
@@ -563,9 +849,11 @@
         <div id="solutionResult" hidden>
           <div id="solutionAlg" class="solution-alg"></div>
           <div class="solution-meta">
-            <span id="solutionMetrics"></span
-            ><button type="button" id="copySolutionBtn">复制公式</button
-            ><button type="button" id="playSolutionBtn">▶ 播放转换</button>
+            <span id="solutionMetrics"></span>
+            <button type="button" id="copySolutionBtn">复制公式</button>
+            <button type="button" id="playSolutionBtn" class="primary-btn">
+              ▶ 播放转换
+            </button>
           </div>
           <div id="solutionPreview" hidden>
             <div
@@ -590,11 +878,14 @@
       aria-labelledby="algorithmToolsTitle"
     >
       <div class="card-head">
-        <h2 id="algorithmToolsTitle">公式工具</h2>
+        <div>
+          <h2 id="algorithmToolsTitle">公式工具</h2>
+          <p class="dialog-sub">ALGORITHM UTILITIES</p>
+        </div>
         <button
           type="button"
           id="closeAlgToolsBtn"
-          class="ghost-btn"
+          class="ghost-btn close-x-btn"
           aria-label="关闭公式工具"
         >
           ×
@@ -642,25 +933,76 @@
 
     <dialog id="appearanceDialog" aria-labelledby="appearanceTitle">
       <div class="card-head">
-        <h2 id="appearanceTitle">外观</h2>
+        <div>
+          <h2 id="appearanceTitle">外观与主题</h2>
+          <p class="dialog-sub">STUDIO APPEARANCE</p>
+        </div>
         <button
           type="button"
           id="closeAppearanceBtn"
-          class="ghost-btn"
+          class="ghost-btn close-x-btn"
           aria-label="关闭外观设置"
         >
           ×
         </button>
       </div>
-      <p class="settings-description">选择背景主题，或上传一张自己的壁纸。</p>
-      <div class="theme-options" role="group" aria-label="背景主题">
+      <p class="settings-description">
+        挑选一款精密深色驾驶舱或柔和浅色工作台主题，或上传自定义壁纸。
+      </p>
+
+      <div class="theme-group-label">深色工作室 · DARK STUDIO</div>
+      <div class="theme-options" role="group" aria-label="深色背景主题">
+        <button
+          type="button"
+          data-theme="obsidian"
+          class="theme-swatch obsidian"
+          aria-pressed="true"
+        >
+          <span class="swatch-preview" aria-hidden="true">
+            <i class="sp-bar"></i>
+            <i class="sp-card"><i class="sp-dot"></i></i>
+          </span>
+          <span class="swatch-meta"><strong>曜石</strong><em>深空钴蓝</em></span>
+        </button>
+        <button
+          type="button"
+          data-theme="carbon"
+          class="theme-swatch carbon"
+          aria-pressed="false"
+        >
+          <span class="swatch-preview" aria-hidden="true">
+            <i class="sp-bar"></i>
+            <i class="sp-card"><i class="sp-dot"></i></i>
+          </span>
+          <span class="swatch-meta"><strong>碳纤</strong><em>竞速翠绿</em></span>
+        </button>
+        <button
+          type="button"
+          data-theme="midnight"
+          class="theme-swatch midnight"
+          aria-pressed="false"
+        >
+          <span class="swatch-preview" aria-hidden="true">
+            <i class="sp-bar"></i>
+            <i class="sp-card"><i class="sp-dot"></i></i>
+          </span>
+          <span class="swatch-meta"><strong>星夜</strong><em>极光靛紫</em></span>
+        </button>
+      </div>
+
+      <div class="theme-group-label">浅色工作台 · LIGHT ATELIER</div>
+      <div class="theme-options" role="group" aria-label="浅色背景主题">
         <button
           type="button"
           data-theme="mist"
           class="theme-swatch mist"
-          aria-pressed="true"
+          aria-pressed="false"
         >
-          <span class="swatch-chip"></span>晨雾
+          <span class="swatch-preview" aria-hidden="true">
+            <i class="sp-bar"></i>
+            <i class="sp-card"><i class="sp-dot"></i></i>
+          </span>
+          <span class="swatch-meta"><strong>晨雾</strong><em>瑞士精工</em></span>
         </button>
         <button
           type="button"
@@ -668,7 +1010,11 @@
           class="theme-swatch sand"
           aria-pressed="false"
         >
-          <span class="swatch-chip"></span>暖沙
+          <span class="swatch-preview" aria-hidden="true">
+            <i class="sp-bar"></i>
+            <i class="sp-card"><i class="sp-dot"></i></i>
+          </span>
+          <span class="swatch-meta"><strong>暖沙</strong><em>温润纸艺</em></span>
         </button>
         <button
           type="button"
@@ -676,13 +1022,18 @@
           class="theme-swatch forest"
           aria-pressed="false"
         >
-          <span class="swatch-chip"></span>青屿
+          <span class="swatch-preview" aria-hidden="true">
+            <i class="sp-bar"></i>
+            <i class="sp-card"><i class="sp-dot"></i></i>
+          </span>
+          <span class="swatch-meta"><strong>青屿</strong><em>森系雾绿</em></span>
         </button>
       </div>
-      <label class="upload-zone" for="wallpaperInput"
-        ><strong>＋ 上传自定义壁纸</strong
-        ><span>JPG、PNG 或 WebP，最大 15 MB，仅保存在本机</span></label
-      >
+
+      <label class="upload-zone" for="wallpaperInput">
+        <strong>＋ 上传自定义壁纸</strong>
+        <span>JPG、PNG 或 WebP，最大 15 MB，仅保存在本机</span>
+      </label>
       <input
         type="file"
         id="wallpaperInput"
@@ -690,7 +1041,7 @@
         hidden
       />
       <label class="setting-line" for="wallpaperShade"
-        >背景遮罩 <output id="shadeValue">35%</output></label
+        >背景遮罩强度 <output id="shadeValue">35%</output></label
       >
       <input
         type="range"
@@ -698,13 +1049,15 @@
         min="0"
         max="80"
         value="35"
-        aria-label="壁纸白色遮罩强度"
+        aria-label="壁纸遮罩强度"
       />
       <div class="settings-footer">
         <p id="appearanceMessage" role="status"></p>
         <button type="button" id="removeWallpaperBtn">恢复主题背景</button>
       </div>
     </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
     <script src="js/cross-client.js" defer></script>
     <script src="js/sq1-viewer.js" defer></script>

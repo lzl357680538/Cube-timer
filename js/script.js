@@ -555,12 +555,124 @@ function updateStatistics() {
     if (solve.penalty === "DNF") li.className = "dnf-result";
     else if (solve.penalty === "+2") li.className = "plus-two-result";
     if (index === bestIndex) li.dataset.best = "";
-    li.innerHTML = `<span class="time-index">${index + 1}</span><span class="time-value"></span><div class="time-actions"><button type="button" data-penalty="OK" aria-pressed="${solve.penalty === "OK"}">OK</button><button type="button" data-penalty="+2" aria-pressed="${solve.penalty === "+2"}">+2</button><button type="button" data-penalty="DNF" aria-pressed="${solve.penalty === "DNF"}">DNF</button><button type="button" class="delete-btn" data-delete aria-label="删除第 ${index + 1} 次成绩">×</button></div>`;
+    li.innerHTML = `<span class="time-index">#${index + 1}</span><span class="time-value"></span><div class="time-actions"><button type="button" data-penalty="OK" aria-pressed="${solve.penalty === "OK"}">OK</button><button type="button" data-penalty="+2" aria-pressed="${solve.penalty === "+2"}">+2</button><button type="button" data-penalty="DNF" aria-pressed="${solve.penalty === "DNF"}">DNF</button><button type="button" class="delete-btn" data-delete aria-label="删除第 ${index + 1} 次成绩">×</button></div>`;
     li.querySelector(".time-value").textContent = formatSolveResult(solve);
     fragment.append(li);
   }
   document.getElementById("timeList").replaceChildren(fragment);
   document.getElementById("emptyTimes").hidden = arr.length > 0;
+  renderTrendChart(arr, bestIndex);
+}
+
+function renderTrendChart(arr, bestIndex) {
+  const wrap = document.getElementById("trendChartWrap");
+  const svg = document.getElementById("trendChart");
+  const rangeEl = document.getElementById("trendRange");
+  if (!wrap || !svg) return;
+
+  const recentStart = Math.max(0, arr.length - 40);
+  const points = [];
+  for (let i = recentStart; i < arr.length; i++) {
+    const t = getFinalTime(arr[i]);
+    if (Number.isFinite(t)) {
+      let ao5 = null;
+      if (i >= 4) {
+        const sub = arr
+          .slice(i - 4, i + 1)
+          .map(getFinalTime)
+          .sort((a, b) => a - b);
+        const mid = sub.slice(1, 4);
+        if (mid.every(Number.isFinite)) {
+          ao5 = mid.reduce((a, b) => a + b, 0) / 3;
+        }
+      }
+      points.push({ idx: i, t, ao5, isBest: i === bestIndex });
+    }
+  }
+
+  if (points.length < 2) {
+    wrap.hidden = true;
+    svg.replaceChildren();
+    return;
+  }
+
+  wrap.hidden = false;
+  const values = points.map((p) => p.t);
+  const minT = Math.min(...values);
+  const maxT = Math.max(...values);
+  const span = Math.max(250, maxT - minT);
+  const padT = span * 0.14;
+  const low = Math.max(0, minT - padT);
+  const high = maxT + padT;
+  const W = 420;
+  const H = 88;
+  const padX = 8;
+  const padY = 10;
+
+  const mapX = (k) =>
+    padX + (k / (points.length - 1)) * (W - padX * 2);
+  const mapY = (val) =>
+    H - padY - ((val - low) / (high - low)) * (H - padY * 2);
+
+  const coords = points.map((p, k) => ({
+    x: mapX(k),
+    y: mapY(p.t),
+    ...p,
+  }));
+
+  const lineD = coords
+    .map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`)
+    .join(" ");
+  const areaD = `${lineD} L${coords[coords.length - 1].x.toFixed(1)},${H - 2} L${coords[0].x.toFixed(1)},${H - 2} Z`;
+
+  const ao5Coords = coords.filter((c) => c.ao5 !== null);
+  const ao5D =
+    ao5Coords.length >= 2
+      ? ao5Coords
+          .map(
+            (c, i) =>
+              `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${mapY(c.ao5).toFixed(1)}`,
+          )
+          .join(" ")
+      : "";
+
+  const bestPt = coords.find((c) => c.isBest);
+  const lastPt = coords[coords.length - 1];
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent-bright)" stop-opacity="0.32" />
+        <stop offset="100%" stop-color="var(--accent-bright)" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    <line x1="${padX}" y1="${(H / 2).toFixed(1)}" x2="${W - padX}" y2="${(H / 2).toFixed(1)}" stroke="var(--line)" stroke-dasharray="3 4" stroke-width="1" />
+    <path d="${areaD}" fill="url(#trendGrad)" />
+    <path d="${lineD}" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    ${ao5D ? `<path d="${ao5D}" fill="none" stroke="var(--st-green)" stroke-width="1.75" stroke-dasharray="4 3" stroke-linecap="round" />` : ""}
+    ${bestPt ? `<circle cx="${bestPt.x.toFixed(1)}" cy="${bestPt.y.toFixed(1)}" r="4.2" fill="var(--st-yellow)" stroke="var(--surface)" stroke-width="1.5"><title>PB: ${formatSolveTime(bestPt.t)}</title></circle>` : ""}
+    <circle cx="${lastPt.x.toFixed(1)}" cy="${lastPt.y.toFixed(1)}" r="3.4" fill="var(--accent-bright)" stroke="var(--surface)" stroke-width="1.5"><title>最近: ${formatSolveTime(lastPt.t)}</title></circle>
+  `;
+
+  if (rangeEl) {
+    rangeEl.textContent = `${formatSolveTime(minT)} – ${formatSolveTime(maxT)}`;
+  }
+}
+
+let toastTimer = null;
+function showToast(message) {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = message;
+  el.hidden = false;
+  requestAnimationFrame(() => el.classList.add("is-visible"));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.classList.remove("is-visible");
+    setTimeout(() => {
+      if (!el.classList.contains("is-visible")) el.hidden = true;
+    }, 220);
+  }, 1900);
 }
 
 function setPenalty(index, penalty) {
@@ -615,6 +727,8 @@ function setTimerClass(className) {
   document.getElementById("cubeType").disabled = busy;
   document.getElementById("labTab").disabled = busy;
   document.getElementById("appearanceBtn").disabled = busy;
+  const modeBtn = document.getElementById("themeModeBtn");
+  if (modeBtn) modeBtn.disabled = busy;
   updateScrambleNavButtons();
   fitTimerDisplay(true);
 }
@@ -690,40 +804,41 @@ function getSelectedCrossColor() {
 }
 
 let crossSolveSequence = 0;
+let lastCrossSolution = "";
 function clearCrossResult() {
   crossSolveSequence++;
+  lastCrossSolution = "";
   document.getElementById("crossResult").textContent = "";
 }
 
 async function solveCross(xcross = false) {
   const token = ++crossSolveSequence;
   const result = document.getElementById("crossResult");
+  lastCrossSolution = "";
   const type = document.getElementById("cubeType").value;
   if (!["3x3", "3x3oh"].includes(type)) {
-    result.textContent = "目前仅支持三阶的 Cross / XCross 求解。";
+    result.textContent = "";
     return;
   }
 
   const currentScramble = getCurrentScramble();
   if (!currentScramble) {
-    result.textContent = "打乱还在生成，请稍后再试。";
+    result.textContent = "";
     return;
   }
 
   const color = getSelectedCrossColor();
-  result.textContent = "计算中…";
+  result.textContent = "…";
 
-  const start = performance.now();
   try {
     const solution = await (xcross
       ? window.CrossSolver.solveXCross(currentScramble, color)
       : window.CrossSolver.solveBest(currentScramble, color));
     if (token !== crossSolveSequence) return;
-    const timeTook = (performance.now() - start).toFixed(1);
-    result.textContent = `${solution}（${timeTook} ms）`;
+    lastCrossSolution = String(solution || "").trim();
+    result.textContent = lastCrossSolution || "—";
   } catch (error) {
-    if (token === crossSolveSequence)
-      result.textContent = "求解失败：" + error.message;
+    if (token === crossSolveSequence) result.textContent = "";
   }
 }
 
@@ -902,6 +1017,34 @@ function bindControls() {
     nextBtn.blur();
     stepScramble(1, true);
   });
+
+  const copyScrambleBtn = document.getElementById("copyScrambleBtn");
+  if (copyScrambleBtn) {
+    copyScrambleBtn.addEventListener("click", async () => {
+      copyScrambleBtn.blur();
+      const text = getCurrentScramble().trim();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("已复制打乱公式");
+      } catch {
+        showToast("无法访问剪贴板");
+      }
+    });
+  }
+
+  const crossOutput = document.getElementById("crossResult");
+  if (crossOutput) {
+    crossOutput.addEventListener("click", async () => {
+      if (!lastCrossSolution) return;
+      try {
+        await navigator.clipboard.writeText(lastCrossSolution);
+        showToast("已复制步骤");
+      } catch {
+        showToast("无法访问剪贴板");
+      }
+    });
+  }
 
   const cubeType = document.getElementById("cubeType");
   cubeType.addEventListener("change", () => {
